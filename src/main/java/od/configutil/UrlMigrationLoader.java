@@ -1,5 +1,8 @@
 package od.configutil;
 
+import java.beans.XMLEncoder;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.util.*;
 import java.net.URL;
 import java.io.InputStream;
@@ -82,5 +85,31 @@ public class UrlMigrationLoader implements MigrationSource {
         }
     }
 
+    /**
+     *  Utility method to write a migrations file
+     */
+    public static void writeMigrationsFile(Migrations m, File f) {
+        XMLEncoder e = null;
+        try {
+            FileOutputStream stream = new FileOutputStream(f);
+            e = new XMLEncoder(stream);
+            e.writeObject(m);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        } finally {
+            if ( e != null ) {
+                e.flush();
+                e.close();
+            }
+        }
+    }
+
+    //util to write the first config migrations file, after that we can do it manually
+    public static void main(String[] args) {
+        Migration c = new Migration(201011181800l, "NullMigrationStrategy", new String[] {});
+        Migrations m = new Migrations();
+        m.addMigration(c);
+        writeMigrationsFile(m, new File(args[0]));
+    }
 
 }

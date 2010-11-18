@@ -11,6 +11,15 @@ public final class Migration {
     private String migrationStrategyClassName;
     private String[] arguments;
 
+    public Migration(long versionTarget, String migrationStrategyClassName, String[] arguments) {
+        this.versionTarget = versionTarget;
+        this.migrationStrategyClassName = migrationStrategyClassName;
+        this.arguments = arguments;
+    }
+
+    public Migration() {
+    }
+
     public long getVersionTarget() {
         return versionTarget;
     }

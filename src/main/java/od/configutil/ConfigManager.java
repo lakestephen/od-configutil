@@ -7,12 +7,11 @@ import java.io.File;
 /**
  *
  */
-public class ConfigManager<V> {
+public class ConfigManager {
 
     private ConfigSource configSource;
     private ConfigSink configSink;
     private MigrationSource migrationSource;
-    private ConfigSerializer<V> serializer = new BeanPersistenceSerializer();
 
     public ConfigManager() {
         this(new ClasspathMigrationLoader());
@@ -34,36 +33,12 @@ public class ConfigManager<V> {
         createDefaultSourceAndSink(configDirectory);
     }
 
-    public V loadConfig(String configName) throws ConfigManagerException {
-        try {
-            return doLoad(configName);
-        } catch (ConfigManagerException t) {
-            throw t;
-        } catch (Throwable t) {
-            throw new ConfigManagerException("Failed during ConfigManger.loadConfig", t);
-        }
-    }
-
-    public void saveConfig(String configName, V config) throws ConfigManagerException {
-        try {
-            doSave(configName, config);
-        } catch (ConfigManagerException t) {
-            throw t;
-        } catch (Throwable t) {
-            throw new ConfigManagerException("Failed during ConfigManger.saveConfig", t);
-        }
-    }
-
     public void setConfigSource(ConfigSource configSource) {
         this.configSource = configSource;
     }
 
     public void setConfigSink(ConfigSink configSink) {
         this.configSink = configSink;
-    }
-
-    public void setSerializer(ConfigSerializer<V> serializer) {
-        this.serializer = serializer;
     }
 
     public void setMigrationSource(MigrationSource migrationSource) {
@@ -84,7 +59,53 @@ public class ConfigManager<V> {
         configSink = defaultSourceAndSink;
     }
 
-    private V doLoad(String configName) throws Exception {
+    public <V> V loadConfig(String configName) throws ConfigManagerException {
+        BeanPersistenceSerializer<V> serializer = getDefaultSerializer();
+        return loadConfig(configName, serializer);
+    }
+
+    public <V> V loadConfig(String configName, ConfigSerializer<V> serializer) throws ConfigManagerException {
+        try {
+            return doLoad(configName, serializer);
+        } catch (ConfigManagerException t) {
+            throw t;
+        } catch (Throwable t) {
+            throw new ConfigManagerException("Failed during ConfigManger.loadConfig", t);
+        }
+    }
+
+    public <V> void saveConfig(String configName, V config) throws ConfigManagerException {
+        BeanPersistenceSerializer<V> serializer = getDefaultSerializer();
+        saveConfig(configName, config, serializer);
+    }
+
+    public <V> void saveConfig(String configName, V config, ConfigSerializer<V> serializer) throws ConfigManagerException {
+        try {
+            doSave(configName, config, serializer);
+        } catch (ConfigManagerException t) {
+            throw t;
+        } catch (Throwable t) {
+            throw new ConfigManagerException("Failed during ConfigManger.saveConfig", t);
+        }
+    }
+
+    public boolean configExists(String configName) throws ConfigManagerException {
+        try {
+            SortedMap<Long, List<ConfigMigrationStategy>> configMigrations = readConfigMigrations();
+            ConfigData d = configSource.loadConfiguration(configName, new ArrayList<Long>(configMigrations.keySet()));
+            return d != null;
+        } catch (ConfigManagerException e ) {
+            throw e;
+        } catch (Throwable t) {
+            throw new ConfigManagerException("Failed during ConfigManger.configExists", t);
+        }
+    }
+
+    protected <V> BeanPersistenceSerializer<V> getDefaultSerializer() {
+        return new BeanPersistenceSerializer<V>();
+    }
+
+    private <V> V doLoad(String configName, ConfigSerializer<V> serializer) throws Exception {
         SortedMap<Long, List<ConfigMigrationStategy>> configMigrations = readConfigMigrations();
         ConfigData d = configSource.loadConfiguration(configName, new ArrayList<Long>(configMigrations.keySet()));
         d = patchConfig(configMigrations, d);
@@ -92,7 +113,7 @@ public class ConfigManager<V> {
         return serializer.deserialize(serializedConfig);
     }
 
-    private void doSave(String configName, V config) throws Exception {
+    private <V> void doSave(String configName, V config, ConfigSerializer<V> serializer) throws Exception {
         SortedMap<Long, List<ConfigMigrationStategy>> configMigrations = readConfigMigrations();
         String serializedConfig = serializer.serialize(config);
         ConfigData configData = new ConfigData(configName, configMigrations.lastKey(), serializedConfig);

@@ -21,4 +21,8 @@ public class Migrations {
     public void setMigrations(ArrayList<Migration> migrations) {
         this.migrations = migrations;
     }
+
+    public void addMigration(Migration c) {
+        migrations.add(c);
+    }
 }
