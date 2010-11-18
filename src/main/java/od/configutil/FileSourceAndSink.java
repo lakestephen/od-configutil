@@ -29,8 +29,9 @@ public class FileSourceAndSink implements ConfigSink, ConfigSource {
         File configFile = new File(configDirectory, fileName);
         File backupFile = new File(configDirectory, fileName + ".bak");
         LogMethods.log.info("Writing configuration file at " + configFile);
-        checkConfigFileWritable(configFile);
-        checkConfigFileWritable(backupFile);
+        checkConfigDirectoryWritable();
+        checkConfigFileWritableIfExists(configFile);
+        checkConfigFileWritableIfExists(backupFile);
 
         File tempConfigFile = null;
         try {
@@ -156,8 +157,14 @@ public class FileSourceAndSink implements ConfigSink, ConfigSource {
         }
     }
 
-    private void checkConfigFileWritable(File configToWrite) throws ConfigManagerException {
-        if ( ! configToWrite.canWrite()) {
+    private void checkConfigDirectoryWritable() throws ConfigManagerException {
+        if ( ! configDirectory.canWrite() ) {
+            throw new ConfigManagerException("Cannot write to config directory " + configDirectory);
+        }
+    }
+
+    private void checkConfigFileWritableIfExists(File configToWrite) throws ConfigManagerException {
+        if ( configToWrite.exists() && ! configToWrite.canWrite()) {
             throw new ConfigManagerException("Cannot write to config file " + configToWrite);
         }
     }
