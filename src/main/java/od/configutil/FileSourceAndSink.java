@@ -3,6 +3,7 @@ package od.configutil;
 import java.io.*;
 import java.util.List;
 import java.util.Stack;
+import java.util.StringTokenizer;
 
 /**
  * Created by IntelliJ IDEA.
@@ -89,10 +90,13 @@ public class FileSourceAndSink implements ConfigSink, ConfigSource {
     private ConfigData readConfig(String configName, long v) {
         ConfigData result = null;
         try {
-            InputStream configInputStream = getFileInputStream(configName, v);
+            InputStream configInputStream = getInputStream(configName, v);
+            BufferedReader br = new BufferedReader(new InputStreamReader(configInputStream));
             if ( configInputStream != null) {
-                String config = convertStreamToString(configInputStream);
-                result = new ConfigData(configName, v, config);
+                if ( checkVersion(br, v) ) {
+                    String config = convertStreamToString(br);
+                    result = new ConfigData(configName, v, config);
+                }
             }
         } catch (Exception e) {
             LogMethods.log.error("Error loading " + configName + " configuration version " + v + " looking for older configs..", e);
@@ -100,36 +104,51 @@ public class FileSourceAndSink implements ConfigSink, ConfigSource {
         return result;
     }
 
-    private InputStream getFileInputStream(String configName, long version) throws FileNotFoundException {
+    //expect to find configVersion=versionId on the first line
+    //we strip this off before parsing the rest of the config
+    private boolean checkVersion(BufferedReader br, long v) throws IOException {
+        String version = br.readLine();
+
+        boolean result = false;
+        if ( version.startsWith("configVersion=")) {
+            long versionNumber = Long.parseLong(version.substring(14));
+            if ( versionNumber == v) {
+                result = true;
+            }
+        }
+        return result;
+    }
+
+    private InputStream getInputStream(String configName, long version) throws FileNotFoundException {
         InputStream configInputStream = null;
         File f = new File(configDirectory, getConfigFileName(configName, version));
         if (f.canRead()) {
             LogMethods.log.info("Found configuration file: " + f);
             configInputStream = new FileInputStream(f);
         } else {
-            LogMethods.log.info("Could not find configuration file: " + f);
+            LogMethods.log.info("Could not " + (f.exists() ? "read" : "find") + " configuration file: " + f);
         }
         return configInputStream;
     }
 
-    private String getConfigFileName(String configName, long version) {
+    protected String getConfigFileName(String configName, long version) {
         return configName + "." + version + "." + extension;
     }
 
-    private String convertStreamToString(InputStream is) throws IOException {
+    private String convertStreamToString(BufferedReader br) throws IOException {
         final int BUF_SIZE = 4096;
-        final byte[] BUFFER = new byte[BUF_SIZE];
+        final char[] BUFFER = new char[BUF_SIZE];
 
         StringBuffer returnBuffer = new StringBuffer();
         try {
             int bytesRead;
-            while ((bytesRead = is.read(BUFFER)) != -1) {
+            while ((bytesRead = br.read(BUFFER)) != -1) {
                 returnBuffer.append(new String(BUFFER, 0, bytesRead));
             }
         } finally {
-            if ( is != null) {
+            if ( br != null) {
                 try {
-                    is.close();
+                    br.close();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

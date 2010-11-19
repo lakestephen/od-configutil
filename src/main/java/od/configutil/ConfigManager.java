@@ -59,11 +59,21 @@ public class ConfigManager {
         configSink = defaultSourceAndSink;
     }
 
+    /**
+     * Load the config with the name provided and migrate it to the latest patch level, using BeanPersistenceSerializer to
+     * create the returned config object after patching is complete
+     * @return a config at the latest patch level, or null if no config file could be found
+     */
     public <V> V loadConfig(String configName) throws ConfigManagerException {
         BeanPersistenceSerializer<V> serializer = getDefaultSerializer();
         return loadConfig(configName, serializer);
     }
 
+    /**
+     * Load the config with the name provided and migrate it to the latest patch level, using BeanPersistenceSerializer to
+     * create the returned config object after patching is complete
+     * @return a config at the latest patch level, or null if no config file could be found
+     */
     public <V> V loadConfig(String configName, ConfigSerializer<V> serializer) throws ConfigManagerException {
         try {
             return doLoad(configName, serializer);
@@ -89,18 +99,6 @@ public class ConfigManager {
         }
     }
 
-    public boolean configExists(String configName) throws ConfigManagerException {
-        try {
-            SortedMap<Long, List<ConfigMigrationStategy>> configMigrations = readConfigMigrations();
-            ConfigData d = configSource.loadConfiguration(configName, new ArrayList<Long>(configMigrations.keySet()));
-            return d != null;
-        } catch (ConfigManagerException e ) {
-            throw e;
-        } catch (Throwable t) {
-            throw new ConfigManagerException("Failed during ConfigManger.configExists", t);
-        }
-    }
-
     protected <V> BeanPersistenceSerializer<V> getDefaultSerializer() {
         return new BeanPersistenceSerializer<V>();
     }
@@ -108,9 +106,14 @@ public class ConfigManager {
     private <V> V doLoad(String configName, ConfigSerializer<V> serializer) throws Exception {
         SortedMap<Long, List<ConfigMigrationStategy>> configMigrations = readConfigMigrations();
         ConfigData d = configSource.loadConfiguration(configName, new ArrayList<Long>(configMigrations.keySet()));
-        d = patchConfig(configMigrations, d);
-        String serializedConfig = d.getSerializedConfig();
-        return serializer.deserialize(serializedConfig);
+
+        V result = null;
+        if ( d != null ) {
+            d = patchConfig(configMigrations, d);
+            String serializedConfig = d.getSerializedConfig();
+            result = serializer.deserialize(serializedConfig);
+        }
+        return result;
     }
 
     private <V> void doSave(String configName, V config, ConfigSerializer<V> serializer) throws Exception {
@@ -138,14 +141,15 @@ public class ConfigManager {
         long fromVersion = oldConfig.getVersion();
         long toVersion = migrations.lastKey();
         String configString = oldConfig.getSerializedConfig();
+        LogMethods.log.info("config " + configName + " at version " + fromVersion + ", required version " + toVersion);
 
+        migrationsToRun.remove(fromVersion); //we are already at this patch version, don't need to run migration        
         for (Map.Entry<Long, List<ConfigMigrationStategy>> entry : migrationsToRun.entrySet() ) {
             for (ConfigMigrationStategy s : entry.getValue()) {
                 LogMethods.log.info("Migrating config " + configName + " to version " + entry.getKey() + " using strategy " + s);
                 configString = s.migrate(configName, configString);
             }
         }
-        LogMethods.log.info("Patched " + configName + " from " + fromVersion + " to " + toVersion);
         return new ConfigData(configName, toVersion, configString);
     }
 }

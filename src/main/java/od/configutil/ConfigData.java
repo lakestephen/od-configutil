@@ -6,7 +6,7 @@ package od.configutil;
  * Date: 29-Apr-2010
  * Time: 16:07:25
  */
-public class ConfigData {
+class ConfigData {
 
     private long version;
     private String configName;

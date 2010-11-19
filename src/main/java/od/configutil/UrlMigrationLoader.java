@@ -106,7 +106,7 @@ public class UrlMigrationLoader implements MigrationSource {
 
     //util to write the first config migrations file, after that we can do it manually
     public static void main(String[] args) {
-        Migration c = new Migration(201011181800l, "NullMigrationStrategy", new String[] {});
+        Migration c = new Migration(201011181800l, "od.configutil.NullMigrationStrategy", new String[] {});
         Migrations m = new Migrations();
         m.addMigration(c);
         writeMigrationsFile(m, new File(args[0]));
