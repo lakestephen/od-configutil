@@ -12,6 +12,8 @@ import java.util.List;
 */
 public interface ConfigSource {
 
+    String CONFIG_VERSION_PREFIX = "configVersion=";
+
     /**
      * Return the most up to date ConfigData available
      * If this is not the most recent version, it may subsequently be migrated
