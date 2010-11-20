@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<java version="1.6.0_14" class="java.beans.XMLDecoder">
+ <object class="od.configutil.Migrations">
+  <void property="migrations">
+   <void method="add">
+    <object class="od.configutil.Migration">
+     <void property="arguments">
+      <array class="java.lang.String" length="0"/>
+     </void>
+     <void property="migrationStrategyClassName">
+      <string>od.configutil.NullMigrationStrategy</string>
+     </void>
+     <void property="versionTarget">
+      <long>201011181800</long>
+     </void>
+    </object>
+   </void>
+   <void method="add">
+    <object class="od.configutil.Migration">
+     <void property="arguments">
+      <array class="java.lang.String" length="0"/>
+     </void>
+     <void property="migrationStrategyClassName">
+      <string>od.configutil.NullMigrationStrategy</string>
+     </void>
+     <void property="versionTarget">
+      <long>201011190908</long>
+     </void>
+    </object>
+   </void>
+  </void>
+ </object>
+</java> 

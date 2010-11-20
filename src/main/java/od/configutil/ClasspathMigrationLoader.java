@@ -3,8 +3,6 @@ package od.configutil;
 import java.net.URL;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Enumeration;
-import java.io.IOException;
 
 /**
  * Created by IntelliJ IDEA.
@@ -17,14 +15,14 @@ public class ClasspathMigrationLoader extends UrlMigrationLoader {
     private static final String DEFAULT_MIGRATION_PATH = "/configMigrations.xml";
 
     public ClasspathMigrationLoader() {
-        super(getDefaultUrl(DEFAULT_MIGRATION_PATH));
+        super(getConfigMigrationUrl(DEFAULT_MIGRATION_PATH));
     }
 
     public ClasspathMigrationLoader(String path) {
-        super(getDefaultUrl(path));
+        super(getConfigMigrationUrl(path));
     }
 
-    private static List<URL> getDefaultUrl(String path) {
+    private static List<URL> getConfigMigrationUrl(String path) {
         List<URL> urls = new ArrayList<URL>();
         URL u = ClasspathMigrationLoader.class.getResource(
             path
@@ -32,7 +30,7 @@ public class ClasspathMigrationLoader extends UrlMigrationLoader {
         if ( u != null ) {
             urls.add(u);
         } else {
-            LogMethods.log.error("Failed to find default configMigrations resource from " + path);
+            LogMethods.log.error("Failed to find configMigrations resource from " + path);
         }
         return urls;
     }
