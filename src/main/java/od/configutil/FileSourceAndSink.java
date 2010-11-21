@@ -119,8 +119,10 @@ public class FileSourceAndSink implements ConfigSink, ConfigSource {
                 backupFile.delete();
 
                 LogMethods.log.debug("About to rename old config: " + configFile + " to " + backupFile);
-                configFile.renameTo(backupFile);
-
+                if (!configFile.renameTo(backupFile)) {
+                    throw new IOException("Unable to rename old config: " + configFile + " to " + backupFile);
+                }
+                
                 LogMethods.log.debug("About to rename temp config: " + tempConfigFile + " to " + configFile);
                 if (!tempConfigFile.renameTo(configFile)) {
                     throw new IOException("Unable to rename temp config: " + tempConfigFile + " to new config: " + configFile);
