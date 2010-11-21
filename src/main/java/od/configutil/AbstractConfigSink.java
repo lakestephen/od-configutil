@@ -1,6 +1,7 @@
 package od.configutil;
 
 import java.io.*;
+import java.net.URL;
 
 /**
  * Created by IntelliJ IDEA.
@@ -17,14 +18,22 @@ public abstract class AbstractConfigSink implements ConfigSink {
         this.textFileEncoding = textFileEncoding;
     }
 
-    public void saveConfiguration(ConfigData configuration) throws ConfigManagerException {
+    public URL saveConfiguration(ConfigData configuration) throws ConfigManagerException {
         String fileName = getConfigFileName(configuration.getConfigName(), configuration.getVersion());
-        writeConfig(configuration, fileName);
+        try {
+            return writeConfig(configuration, fileName);
+        } catch ( Throwable t ) {
+            if ( t instanceof ConfigManagerException ) {
+                throw (ConfigManagerException)t; //re-throw to preserve stack
+            } else {
+                throw new ConfigManagerException("Error saving config", t);
+            }
+        }
     }
 
     protected abstract String getConfigFileName(String configName, long version);
 
-    protected abstract void writeConfig(ConfigData configuration, String fileName) throws ConfigManagerException;
+    protected abstract URL writeConfig(ConfigData configuration, String fileName) throws Exception;
 
     protected void writeConfigToStream(OutputStream outStream, String text, long version) throws IOException {
         if (text == null) {

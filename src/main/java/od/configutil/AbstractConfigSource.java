@@ -48,8 +48,8 @@ public abstract class AbstractConfigSource implements ConfigSource {
                     result = new ConfigData(configName, requiredVersion, config);
                 }
             }
-        } catch (Exception e) {
-            LogMethods.log.error("Error loading " + configName + " configuration version " + requiredVersion + " looking for older configs..", e);
+        } catch (Throwable t) {
+            LogMethods.log.error("Error loading " + configName + " configuration version " + requiredVersion + " looking for older configs..", t);
         }
         return result;
     }

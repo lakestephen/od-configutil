@@ -1,5 +1,7 @@
 package od.configutil;
 
+import java.net.URL;
+
 /**
  * Created by IntelliJ IDEA.
 * User: Nick Ebbutt
@@ -10,6 +12,6 @@ package od.configutil;
 */
 public interface ConfigSink {
 
-    public void saveConfiguration(ConfigData configuration) throws ConfigManagerException;
+    public URL saveConfiguration(ConfigData configuration) throws ConfigManagerException;
 
 }

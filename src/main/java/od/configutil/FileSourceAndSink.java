@@ -1,6 +1,7 @@
 package od.configutil;
 
 import java.io.*;
+import java.net.URL;
 import java.util.List;
 
 /**
@@ -34,8 +35,8 @@ public class FileSourceAndSink implements ConfigSink, ConfigSource {
         return fileSource.loadConfiguration(configName, supportedVersions);
     }
 
-    public void saveConfiguration(ConfigData configuration) throws ConfigManagerException {
-        fileSink.saveConfiguration(configuration);
+    public URL saveConfiguration(ConfigData configuration) throws ConfigManagerException {
+        return fileSink.saveConfiguration(configuration);
     }
 
     /**
@@ -89,7 +90,7 @@ public class FileSourceAndSink implements ConfigSink, ConfigSource {
             return FileSourceAndSink.this.getConfigFileName(configName, version);
         }
 
-        protected void writeConfig(ConfigData configuration, String fileName) throws ConfigManagerException {
+        protected URL writeConfig(ConfigData configuration, String fileName) throws Exception {
             File configFile = new File(configDirectory, fileName);
             File backupFile = new File(configDirectory, fileName + ".bak");
             LogMethods.log.info("Writing configuration file at " + configFile);
@@ -135,6 +136,7 @@ public class FileSourceAndSink implements ConfigSink, ConfigSource {
                     tempConfigFile.delete();
                  }
             }
+            return configFile.toURI().toURL();
         }
 
         private void checkConfigDirectoryWritable() throws ConfigManagerException {

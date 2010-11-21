@@ -84,14 +84,14 @@ public class ConfigManager {
         }
     }
 
-    public <V> void saveConfig(String configName, V config) throws ConfigManagerException {
+    public <V> URL saveConfig(String configName, V config) throws ConfigManagerException {
         BeanPersistenceSerializer<V> serializer = getDefaultSerializer();
-        saveConfig(configName, config, serializer);
+        return saveConfig(configName, config, serializer);
     }
 
-    public <V> void saveConfig(String configName, V config, ConfigSerializer<V> serializer) throws ConfigManagerException {
+    public <V> URL saveConfig(String configName, V config, ConfigSerializer<V> serializer) throws ConfigManagerException {
         try {
-            doSave(configName, config, serializer);
+            return doSave(configName, config, serializer);
         } catch (ConfigManagerException t) {
             throw t;
         } catch (Throwable t) {
@@ -116,11 +116,11 @@ public class ConfigManager {
         return result;
     }
 
-    private <V> void doSave(String configName, V config, ConfigSerializer<V> serializer) throws Exception {
+    private <V> URL doSave(String configName, V config, ConfigSerializer<V> serializer) throws Exception {
         SortedMap<Long, List<ConfigMigrationStategy>> configMigrations = readConfigMigrations();
         String serializedConfig = serializer.serialize(config);
         ConfigData configData = new ConfigData(configName, configMigrations.lastKey(), serializedConfig);
-        configSink.saveConfiguration(configData);
+        return configSink.saveConfiguration(configData);
     }
 
     private SortedMap<Long, List<ConfigMigrationStategy>> readConfigMigrations() throws Exception {
