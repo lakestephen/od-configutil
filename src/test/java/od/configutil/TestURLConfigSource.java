@@ -25,6 +25,7 @@ public class TestURLConfigSource extends TestCase {
 
         URL savedFileUrl = cm.saveConfig("testConfig", new TestConfig());
         URLConfigSource urlConfigSource = new URLConfigSource();
+        urlConfigSource.setTimeout(100);
 
         //now try loading the config using the URLConfigSource
         cm.setConfigSource(urlConfigSource);
@@ -33,9 +34,12 @@ public class TestURLConfigSource extends TestCase {
 
         long timeMillis = System.currentTimeMillis();
         urlConfigSource.setTimeout(10);
-        t = cm.loadConfig("http://wibble.com/wibble.txt");
-        assertNull(t);
-        assertTrue((System.currentTimeMillis() - timeMillis) < 1000);
+        try {
+            t = cm.loadConfig("http://wibble.com/wibble.txt");
+            fail("Should throw NoConfigFoundException");
+        } catch ( NoConfigFoundException nfe) {
+            assertTrue((System.currentTimeMillis() - timeMillis) < 1000);
+        }
     }
 
     public static class TestConfig {

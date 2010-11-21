@@ -1,6 +1,7 @@
 package od.configutil;
 
 import java.util.List;
+import java.util.SortedSet;
 
 /**
  * Created by IntelliJ IDEA.
@@ -19,8 +20,9 @@ public interface ConfigSource {
      * If this is not the most recent version, it may subsequently be migrated
      *
      * @param configName, name of the config to load
-     * @param supportedVersions, sorted list of versions, lowest (earliest) first
-     * @return the ConfigData with the highest available version id, pre migration
+     * @param supportedVersions, sorted set of supported versions ids, highest ids representing most recent supported version
+     * @return the ConfigData pre-migration with the highest available version id, or null if no config could be found
+     * @throws ConfigManagerException if an error occurs which prevents config load
      */
-    public ConfigData loadConfiguration(String configName, List<Long> supportedVersions) throws ConfigManagerException;
+    public ConfigData loadConfiguration(String configName, SortedSet<Long> supportedVersions) throws ConfigManagerException;
 }

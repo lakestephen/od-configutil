@@ -2,7 +2,7 @@ package od.configutil;
 
 import java.io.*;
 import java.net.URL;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -31,7 +31,7 @@ public class FileSourceAndSink implements ConfigSink, ConfigSource {
         this.fileSink = new FileSink();
     }
 
-    public ConfigData loadConfiguration(String configName, List<Long> supportedVersions) throws ConfigManagerException {
+    public ConfigData loadConfiguration(String configName, SortedSet<Long> supportedVersions) throws ConfigManagerException {
         return fileSource.loadConfiguration(configName, supportedVersions);
     }
 
@@ -48,6 +48,15 @@ public class FileSourceAndSink implements ConfigSink, ConfigSource {
             super(textFileEncoding);
         }
 
+        @Override
+        protected List<String> getFileNames(String configName, List<Long> supportedVersions) {
+            List<String> fileNames = new LinkedList<String>();
+            for ( Long version : supportedVersions) {
+                fileNames.add(FileSourceAndSink.this.getConfigFileName(configName, version));
+            }
+            return fileNames;
+        }
+
         protected void loadStarting(String configName) throws ConfigManagerException {
             LogMethods.log.info("Searching for " + configName + " configuration in: " + configDirectory);
             checkConfigDirectoryReadable();
@@ -57,10 +66,6 @@ public class FileSourceAndSink implements ConfigSink, ConfigSource {
             if ( ! configDirectory.canRead() ) {
                 throw new ConfigManagerException("Cannot read from config directory " + configDirectory);
             }
-        }
-
-        protected String getConfigFileName(String configName, long version) {
-            return FileSourceAndSink.this.getConfigFileName(configName, version);
         }
 
         protected InputStream getInputStream(String configFileName) throws FileNotFoundException {

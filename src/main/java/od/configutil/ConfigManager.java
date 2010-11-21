@@ -59,10 +59,12 @@ public class ConfigManager {
         configSink = defaultSourceAndSink;
     }
 
-    /**
-     * Load the config with the name provided and migrate it to the latest patch level, using BeanPersistenceSerializer to
-     * create the returned config object after patching is complete
-     * @return a config at the latest patch level, or null if no config file could be found
+   /**
+     * Load the config with the name provided using the configSource registered with this ConfigManager,
+     * and migrate it to the latest patch level using the migrations defined by config manager's MigrationSource.
+     * Use BeanPersistenceSerializer to deserialize the migrated config into an instance of the required config type
+     * @return a config at the latest patch level
+     * @throws ConfigManagerException, if config could not be loaded
      */
     public <V> V loadConfig(String configName) throws ConfigManagerException {
         BeanPersistenceSerializer<V> serializer = getDefaultSerializer();
@@ -70,9 +72,11 @@ public class ConfigManager {
     }
 
     /**
-     * Load the config with the name provided and migrate it to the latest patch level, using BeanPersistenceSerializer to
-     * create the returned config object after patching is complete
-     * @return a config at the latest patch level, or null if no config file could be found
+     * Load the config with the name provided using the configSource registered with this ConfigManager,
+     * and migrate it to the latest patch level using the migrations defined by config manager's MigrationSource.
+     * Use the serializer provided to deserialize the migrated config into an instance of the required config type 
+     * @return a config at the latest patch level
+     * @throws ConfigManagerException, if config could not be loaded
      */
     public <V> V loadConfig(String configName, ConfigSerializer<V> serializer) throws ConfigManagerException {
         try {
@@ -84,11 +88,21 @@ public class ConfigManager {
         }
     }
 
+    /**
+     * Save the config using the name provided, and the serializer and configSink registered with configManager
+     * @return a URL to the saved config file
+     * @throws ConfigManagerException, if the save failed
+     */
     public <V> URL saveConfig(String configName, V config) throws ConfigManagerException {
         BeanPersistenceSerializer<V> serializer = getDefaultSerializer();
         return saveConfig(configName, config, serializer);
     }
 
+    /**
+     * Save the config using the name and serializer provided, and the configSink registered with configManager
+     * @return a URL to the saved config file
+     * @throws ConfigManagerException, if the save failed
+     */
     public <V> URL saveConfig(String configName, V config, ConfigSerializer<V> serializer) throws ConfigManagerException {
         try {
             return doSave(configName, config, serializer);
@@ -105,15 +119,17 @@ public class ConfigManager {
 
     private <V> V doLoad(String configName, ConfigSerializer<V> serializer) throws Exception {
         SortedMap<Long, List<ConfigMigrationStategy>> configMigrations = readConfigMigrations();
-        ConfigData d = configSource.loadConfiguration(configName, new ArrayList<Long>(configMigrations.keySet()));
+        SortedSet<Long> migrationVersions = new TreeSet<Long>(configMigrations.keySet());
 
-        V result = null;
-        if ( d != null ) {
+        //this should throw an exception if an error occurs, null indicates config not found
+        ConfigData d = configSource.loadConfiguration(configName, migrationVersions);
+        if ( d == null ) {
+            throw new NoConfigFoundException("Could not find a config to load");
+        } else {
             d = patchConfig(configMigrations, d);
             String serializedConfig = d.getSerializedConfig();
-            result = serializer.deserialize(serializedConfig);
+            return serializer.deserialize(serializedConfig);
         }
-        return result;
     }
 
     private <V> URL doSave(String configName, V config, ConfigSerializer<V> serializer) throws Exception {

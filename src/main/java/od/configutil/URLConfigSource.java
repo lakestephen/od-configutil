@@ -3,6 +3,8 @@ package od.configutil;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -105,8 +107,8 @@ public class URLConfigSource extends AbstractConfigSource {
     }
 
     @Override
-    protected String getConfigFileName(String configName, long version) {
-        return getUrlSpec(configName);
+    protected List<String> getFileNames(String configName, List<Long> version) {
+        return Collections.singletonList(getUrlSpec(configName));
     }
 
     protected String getUrlSpec(String configName) {
