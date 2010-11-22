@@ -62,12 +62,12 @@ public class ConfigManager {
    /**
      * Load the config with the name provided using the configSource registered with this ConfigManager,
      * and migrate it to the latest patch level using the migrations defined by config manager's MigrationSource.
-     * Use BeanPersistenceSerializer to deserialize the migrated config into an instance of the required config type
+    *
      * @return a config at the latest patch level
      * @throws ConfigManagerException, if config could not be loaded
      */
     public <V> V loadConfig(String configName) throws ConfigManagerException {
-        BeanPersistenceSerializer<V> serializer = getDefaultSerializer();
+        ConfigSerializer<V> serializer = createSerializer();
         return loadConfig(configName, serializer);
     }
 
@@ -89,12 +89,12 @@ public class ConfigManager {
     }
 
     /**
-     * Save the config using the name provided, and the serializer and configSink registered with configManager
+     * Save the config using the name provided and configSink registered with configManager
      * @return a URL to the saved config file
      * @throws ConfigManagerException, if the save failed
      */
     public <V> URL saveConfig(String configName, V config) throws ConfigManagerException {
-        BeanPersistenceSerializer<V> serializer = getDefaultSerializer();
+        ConfigSerializer<V> serializer = createSerializer();
         return saveConfig(configName, config, serializer);
     }
 
@@ -113,8 +113,9 @@ public class ConfigManager {
         }
     }
 
-    protected <V> BeanPersistenceSerializer<V> getDefaultSerializer() {
-        return new BeanPersistenceSerializer<V>();
+    //Use XStream by default, can be overridden
+    protected <V> ConfigSerializer<V> createSerializer() {
+        return new XStreamSeralizer<V>();
     }
 
     private <V> V doLoad(String configName, ConfigSerializer<V> serializer) throws Exception {

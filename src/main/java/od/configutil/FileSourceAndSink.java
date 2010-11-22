@@ -115,12 +115,16 @@ public class FileSourceAndSink implements ConfigSink, ConfigSource {
     
                 LogMethods.log.debug("Written: " + tempConfigFile);
 
-                LogMethods.log.debug("About to delete " + backupFile);
-                backupFile.delete();
+                if ( backupFile.exists()) {
+                    LogMethods.log.debug("About to delete " + backupFile);
+                    backupFile.delete();
+                }
 
-                LogMethods.log.debug("About to rename old config: " + configFile + " to " + backupFile);
-                if (!configFile.renameTo(backupFile)) {
-                    throw new IOException("Unable to rename old config: " + configFile + " to " + backupFile);
+                if ( configFile.exists()) {
+                    LogMethods.log.debug("About to rename old config: " + configFile + " to " + backupFile);
+                    if (!configFile.renameTo(backupFile)) {
+                        throw new IOException("Unable to rename old config: " + configFile + " to " + backupFile);
+                    }
                 }
                 
                 LogMethods.log.debug("About to rename temp config: " + tempConfigFile + " to " + configFile);
