@@ -39,6 +39,14 @@ public class FileSourceAndSink implements ConfigSink, ConfigSource {
         return fileSink.saveConfiguration(configuration);
     }
 
+    public boolean canWrite() {
+        return fileSink.canWrite();
+    }
+
+    public File getConfigDirectory() {
+        return configDirectory;
+    }
+
     /**
      * Implementation of FileSource
      */
@@ -152,8 +160,33 @@ public class FileSourceAndSink implements ConfigSink, ConfigSource {
 
         private void checkConfigDirectoryWritable() throws ConfigManagerException {
             if ( ! configDirectory.canWrite() ) {
-                throw new ConfigManagerException("Cannot write to config directory " + configDirectory);
+                //Windows sometimes returns false for canWrite although in fact we
+                //can write a file to the directory. My Documents folder seems to be like this
+                //we can only really tell by trying to write a test file
+                boolean testFileWrite = tryToWriteTestFile();
+                if ( ! testFileWrite ) {    
+                    throw new ConfigManagerException("Cannot write to config directory " + configDirectory);
+                }
             }
+        }
+
+        private boolean tryToWriteTestFile() {
+            boolean testFileWrite = false;
+            File testFile = new File(configDirectory, "tmp" + System.currentTimeMillis());
+            try {
+                boolean success = testFile.createNewFile();
+                if ( success ) {
+                    boolean deleted = testFile.delete();
+                    if ( ! deleted ) {
+                        testFile.deleteOnExit();
+                    } else {
+                        testFileWrite = true;
+                    }
+                }
+            } catch (IOException e) {
+                LogMethods.log.warn("Test file write to config directory failed at " + configDirectory);
+            }
+            return testFileWrite;
         }
 
         private void checkConfigFileWritableIfExists(File configToWrite) throws ConfigManagerException {
@@ -162,6 +195,15 @@ public class FileSourceAndSink implements ConfigSink, ConfigSource {
             }
         }
 
+        public boolean canWrite() {
+            boolean result = true;
+            try {
+                checkConfigDirectoryWritable();
+            } catch (ConfigManagerException e) {
+                result = false;
+            }
+            return result;
+        }
     }
 
     protected String getConfigFileName(String configName, long version) {

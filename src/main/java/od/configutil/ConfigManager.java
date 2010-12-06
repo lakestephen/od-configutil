@@ -169,4 +169,21 @@ public class ConfigManager {
         }
         return new ConfigData(configName, toVersion, configString);
     }
+
+    /**
+     * This method should make all feasible attempts to work out whether a config save
+     * is likely to be successful, although it can't guarantee that in the event, this will be the case
+     * @return true if ConfigManager should be able to write a config
+     */
+    public boolean canWrite() {
+        return configSink.canWrite();
+    }
+
+    public ConfigSink getConfigSink() {
+        return configSink;
+    }
+
+    public ConfigSource getConfigSource() {
+        return configSource;
+    }
 }

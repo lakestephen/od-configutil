@@ -12,6 +12,7 @@ import java.net.URL;
 */
 public interface ConfigSink {
 
-    public URL saveConfiguration(ConfigData configuration) throws ConfigManagerException;
+    URL saveConfiguration(ConfigData configuration) throws ConfigManagerException;
 
+    boolean canWrite();
 }
