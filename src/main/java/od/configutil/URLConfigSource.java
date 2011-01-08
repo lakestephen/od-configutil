@@ -5,10 +5,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -101,7 +98,15 @@ public class URLConfigSource extends AbstractConfigSource {
 
     private Executor getTimeoutExecutor() {
         if ( timeoutExecutor == null ) {
-            timeoutExecutor = Executors.newSingleThreadExecutor();
+            timeoutExecutor = Executors.newSingleThreadExecutor(
+                new ThreadFactory() {
+                    public Thread newThread(Runnable r) {
+                        Thread t = new Thread(r, "URLConfigSource-Timeout");
+                        t.setDaemon(true);
+                        return t;
+                    }
+                }
+            );
         }
         return timeoutExecutor;
     }
