@@ -8,6 +8,7 @@ package od.configutil;
  * To change this template use File | Settings | File Templates.
  */
 public class NoConfigFoundException extends ConfigManagerException {
+
     public NoConfigFoundException(String message) {
         super(message);
     }

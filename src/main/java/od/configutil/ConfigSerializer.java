@@ -6,9 +6,9 @@ package od.configutil;
  * Date: 29-Apr-2010
  * Time: 16:24:56
  */
-public interface ConfigSerializer<V> {
+public interface ConfigSerializer {
 
-    String serialize(V configObject) throws Exception;
+    String serialize(Object configObject) throws Exception;
 
-    V deserialize(String serializedConfig) throws Exception;
+    <V> V deserialize(String serializedConfig, Class<V> clazz) throws Exception;
 }

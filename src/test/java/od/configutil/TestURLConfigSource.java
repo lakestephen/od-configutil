@@ -29,16 +29,18 @@ public class TestURLConfigSource extends TestCase {
 
         //now try loading the config using the URLConfigSource
         cm.setConfigSource(urlConfigSource);
-        TestConfig t = cm.loadConfig(savedFileUrl.toString());
+        TestConfig t = cm.loadConfig(savedFileUrl.toString(), TestConfig.class);
         assertEquals("TestConfig", t.getTestConfig());
 
         long timeMillis = System.currentTimeMillis();
         urlConfigSource.setTimeout(10);
         try {
-            t = cm.loadConfig("http://wibble.com/wibble.txt");
+            t = cm.loadConfig("http://wibble.com/wibble.txt", TestConfig.class);
             fail("Should throw NoConfigFoundException");
         } catch ( NoConfigFoundException nfe) {
             assertTrue((System.currentTimeMillis() - timeMillis) < 1000);
+        } catch ( Throwable th) {
+            fail("Should have thrown NoConfigFoundException, instead " + th);
         }
     }
 

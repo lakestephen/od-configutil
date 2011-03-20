@@ -9,7 +9,7 @@ import com.thoughtworks.xstream.io.xml.DomDriver;
  * Date: 22-Nov-2010
  * Time: 14:43:07
  */
-public class XStreamSeralizer<V> implements ConfigSerializer<V> {
+public class XStreamSeralizer implements ConfigSerializer {
 
     private XStream xStream;
 
@@ -21,11 +21,22 @@ public class XStreamSeralizer<V> implements ConfigSerializer<V> {
         this.xStream = xStream;
     }
 
-    public String serialize(V configObject) throws Exception {
+    public String serialize(Object configObject) throws Exception {
         return xStream.toXML(configObject);
     }
 
-    public V deserialize(String serializedConfig) throws Exception {
-        return (V)xStream.fromXML(serializedConfig);
+    public <V> V deserialize(String serializedConfig, Class<V> clazz) throws Exception {
+        Object o = xStream.fromXML(serializedConfig);
+        if ( ! clazz.isAssignableFrom(o.getClass())) {
+            throw new XStreamSerializerException("The deserialized config was not of the expected type " + clazz + ", instead it was of type " + o.getClass());
+        }
+        return (V)o;
+    }
+
+    public static class XStreamSerializerException extends ConfigManagerException {
+
+        public XStreamSerializerException(String message) {
+            super(message);
+        }
     }
 }

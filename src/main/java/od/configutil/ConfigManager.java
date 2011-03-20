@@ -1,8 +1,8 @@
 package od.configutil;
 
+import java.io.File;
 import java.net.URL;
 import java.util.*;
-import java.io.File;
 
 /**
  *
@@ -12,51 +12,32 @@ public class ConfigManager {
     private ConfigSource configSource;
     private ConfigSink configSink;
     private MigrationSource migrationSource;
+    private ConfigSerializer configSerializer;
 
     public ConfigManager() {
-        this(new ClasspathMigrationLoader());
+        this.migrationSource = new ClasspathMigrationLoader();
         createDefaultSourceAndSink();
-    }
-
-    public ConfigManager(URL... migrationsResources) {
-        migrationSource = new UrlMigrationLoader(Arrays.asList(migrationsResources));
-        createDefaultSourceAndSink();
-    }
-
-    public ConfigManager(MigrationSource migrationSource) {
-        this.migrationSource = migrationSource;
-        createDefaultSourceAndSink();
+        createDefaultSerializer();
     }
 
     public ConfigManager(File configDirectory) {
-        this();
-        createDefaultSourceAndSink(configDirectory);
-    }
-
-    public void setConfigSource(ConfigSource configSource) {
-        this.configSource = configSource;
-    }
-
-    public void setConfigSink(ConfigSink configSink) {
-        this.configSink = configSink;
-    }
-
-    public void setMigrationSource(MigrationSource migrationSource) {
-        this.migrationSource = migrationSource;
-    }
-
-    public void setConfigDirectory(File directory) {
-        createDefaultSourceAndSink(directory);
+        this.migrationSource = new ClasspathMigrationLoader();
+        createDirectorySourceAndSink(configDirectory);
+        createDefaultSerializer();
     }
 
     private void createDefaultSourceAndSink() {
-        createDefaultSourceAndSink(new File(System.getProperty("user.home")));
+        createDirectorySourceAndSink(new File(System.getProperty("user.home")));
     }
 
-    private void createDefaultSourceAndSink(File configDirectory) {
+    private void createDirectorySourceAndSink(File configDirectory) {
         FileSourceAndSink defaultSourceAndSink = new FileSourceAndSink(configDirectory);
         configSource = defaultSourceAndSink;
         configSink = defaultSourceAndSink;
+    }
+
+    protected void createDefaultSerializer() {
+        configSerializer = new XStreamSeralizer();
     }
 
    /**
@@ -66,9 +47,8 @@ public class ConfigManager {
      * @return a config at the latest patch level
      * @throws ConfigManagerException, if config could not be loaded
      */
-    public <V> V loadConfig(String configName) throws ConfigManagerException {
-        ConfigSerializer<V> serializer = createSerializer();
-        return loadConfig(configName, serializer);
+    public <V> V loadConfig(String configName, Class<V> configClass) throws ConfigManagerException {
+        return loadConfig(configName, configSerializer, configClass);
     }
 
     /**
@@ -78,9 +58,9 @@ public class ConfigManager {
      * @return a config at the latest patch level
      * @throws ConfigManagerException, if config could not be loaded
      */
-    public <V> V loadConfig(String configName, ConfigSerializer<V> serializer) throws ConfigManagerException {
+    public <V> V loadConfig(String configName, ConfigSerializer serializer, Class<V> configClass) throws ConfigManagerException {
         try {
-            return doLoad(configName, serializer);
+            return doLoad(configName, serializer, configClass);
         } catch (ConfigManagerException t) {
             throw t;
         } catch (Throwable t) {
@@ -93,9 +73,8 @@ public class ConfigManager {
      * @return a URL to the saved config file
      * @throws ConfigManagerException, if the save failed
      */
-    public <V> URL saveConfig(String configName, V config) throws ConfigManagerException {
-        ConfigSerializer<V> serializer = createSerializer();
-        return saveConfig(configName, config, serializer);
+    public URL saveConfig(String configName, Object config) throws ConfigManagerException {
+        return saveConfig(configName, config, configSerializer);
     }
 
     /**
@@ -103,7 +82,7 @@ public class ConfigManager {
      * @return a URL to the saved config file
      * @throws ConfigManagerException, if the save failed
      */
-    public <V> URL saveConfig(String configName, V config, ConfigSerializer<V> serializer) throws ConfigManagerException {
+    public URL saveConfig(String configName, Object config, ConfigSerializer serializer) throws ConfigManagerException {
         try {
             return doSave(configName, config, serializer);
         } catch (ConfigManagerException t) {
@@ -113,12 +92,7 @@ public class ConfigManager {
         }
     }
 
-    //Use XStream by default, can be overridden
-    protected <V> ConfigSerializer<V> createSerializer() {
-        return new XStreamSeralizer<V>();
-    }
-
-    private <V> V doLoad(String configName, ConfigSerializer<V> serializer) throws Exception {
+    private <V> V doLoad(String configName, ConfigSerializer serializer, Class<V> configClass) throws Exception {
         SortedMap<Long, List<ConfigMigrationStategy>> configMigrations = readConfigMigrations();
         SortedSet<Long> migrationVersions = new TreeSet<Long>(configMigrations.keySet());
 
@@ -129,11 +103,11 @@ public class ConfigManager {
         } else {
             d = patchConfig(configMigrations, d);
             String serializedConfig = d.getSerializedConfig();
-            return serializer.deserialize(serializedConfig);
+            return serializer.deserialize(serializedConfig, configClass);
         }
     }
 
-    private <V> URL doSave(String configName, V config, ConfigSerializer<V> serializer) throws Exception {
+    private URL doSave(String configName, Object config, ConfigSerializer serializer) throws Exception {
         SortedMap<Long, List<ConfigMigrationStategy>> configMigrations = readConfigMigrations();
         String serializedConfig = serializer.serialize(config);
         ConfigData configData = new ConfigData(configName, configMigrations.lastKey(), serializedConfig);
@@ -179,11 +153,43 @@ public class ConfigManager {
         return configSink.canWrite();
     }
 
+    public ConfigSource getConfigSource() {
+        return configSource;
+    }
+
+    public void setConfigSource(ConfigSource configSource) {
+        this.configSource = configSource;
+    }
+
     public ConfigSink getConfigSink() {
         return configSink;
     }
 
-    public ConfigSource getConfigSource() {
-        return configSource;
+    public void setConfigSink(ConfigSink configSink) {
+        this.configSink = configSink;
     }
+
+    public MigrationSource getMigrationSource() {
+        return migrationSource;
+    }
+
+    public void setMigrationSource(MigrationSource migrationSource) {
+        this.migrationSource = migrationSource;
+    }
+
+    public ConfigSerializer getConfigSerializer() {
+        return configSerializer;
+    }
+
+    public void setConfigSerializer(ConfigSerializer configSerializer) {
+        this.configSerializer = configSerializer;
+    }
+
+    /**
+     * Create and set a FileConfigSourceAndSink to read and write configs to the directory supplied
+     */
+    public void setConfigDirectory(File directory) {
+        createDirectorySourceAndSink(directory);
+    }
+
 }
