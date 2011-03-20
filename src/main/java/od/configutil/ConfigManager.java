@@ -31,7 +31,7 @@ public class ConfigManager {
     }
 
     private void createDirectorySourceAndSink(File configDirectory) {
-        FileSourceAndSink defaultSourceAndSink = new FileSourceAndSink(configDirectory);
+        ConfigDirectorySourceAndSink defaultSourceAndSink = new ConfigDirectorySourceAndSink(configDirectory);
         configSource = defaultSourceAndSink;
         configSink = defaultSourceAndSink;
     }
@@ -41,26 +41,41 @@ public class ConfigManager {
     }
 
    /**
-     * Load the config with the name provided using the configSource registered with this ConfigManager,
-     * and migrate it to the latest patch level using the migrations defined by config manager's MigrationSource.
-    *
      * @return a config at the latest patch level
      * @throws ConfigManagerException, if config could not be loaded
      */
     public <V> V loadConfig(String configName, Class<V> configClass) throws ConfigManagerException {
-        return loadConfig(configName, configSerializer, configClass);
+        return loadConfig(configName, configClass, this.configSource, this.configSerializer);
     }
 
     /**
-     * Load the config with the name provided using the configSource registered with this ConfigManager,
-     * and migrate it to the latest patch level using the migrations defined by config manager's MigrationSource.
-     * Use the serializer provided to deserialize the migrated config into an instance of the required config type 
      * @return a config at the latest patch level
      * @throws ConfigManagerException, if config could not be loaded
      */
-    public <V> V loadConfig(String configName, ConfigSerializer serializer, Class<V> configClass) throws ConfigManagerException {
+    public <V> V loadConfig(String configName, Class<V> configClass, ConfigSerializer serializer) throws ConfigManagerException {
+        return loadConfig(configName, configClass, this.configSource, serializer);
+
+    }
+
+    /**
+     * @return a config at the latest patch level
+     * @throws ConfigManagerException, if config could not be loaded
+     */
+    public <V> V loadConfig(String configName, Class<V> configClass, ConfigSource configSource) throws ConfigManagerException {
+        return loadConfig(configName, configClass, configSource, this.configSerializer);
+    }
+
+    /**
+     * Load the config with configName using the configSource provided
+     * Migrate it to the latest patch level using the migrations defined by config manager's MigrationSource.
+     * Use the serializer provided to deserialize the migrated config into an instance of the required config type
+     *
+     * @return a config at the latest patch level
+     * @throws ConfigManagerException, if config could not be loaded
+     */
+    public <V> V loadConfig(String configName, Class<V> configClass, ConfigSource configSource, ConfigSerializer serializer) throws ConfigManagerException {
         try {
-            return doLoad(configName, serializer, configClass);
+            return doLoad(configName, serializer, configClass, configSource);
         } catch (ConfigManagerException t) {
             throw t;
         } catch (Throwable t) {
@@ -68,23 +83,43 @@ public class ConfigManager {
         }
     }
 
+
     /**
      * Save the config using the name provided and configSink registered with configManager
      * @return a URL to the saved config file
      * @throws ConfigManagerException, if the save failed
      */
     public URL saveConfig(String configName, Object config) throws ConfigManagerException {
-        return saveConfig(configName, config, configSerializer);
+        return saveConfig(configName, config, this.configSink, this.configSerializer);
     }
+
+     /**
+     * Save the config using the name and serializer provided, and the configSink registered with configManager
+     * @return a URL to the saved config file
+     * @throws ConfigManagerException, if the save failed
+     */
+    public URL saveConfig(String configName, Object config, ConfigSerializer serializer) throws ConfigManagerException {
+        return saveConfig(configName, config, this.configSink, serializer);
+    }
+
+     /**
+     * Save the config using the name and serializer provided, and the configSink registered with configManager
+     * @return a URL to the saved config file
+     * @throws ConfigManagerException, if the save failed
+     */
+    public URL saveConfig(String configName, Object config, ConfigSink configSink) throws ConfigManagerException {
+        return saveConfig(configName, config, configSink, this.configSerializer);
+    }
+
 
     /**
      * Save the config using the name and serializer provided, and the configSink registered with configManager
      * @return a URL to the saved config file
      * @throws ConfigManagerException, if the save failed
      */
-    public URL saveConfig(String configName, Object config, ConfigSerializer serializer) throws ConfigManagerException {
+    public URL saveConfig(String configName, Object config, ConfigSink configSink, ConfigSerializer serializer) throws ConfigManagerException {
         try {
-            return doSave(configName, config, serializer);
+            return doSave(configName, config, serializer, configSink);
         } catch (ConfigManagerException t) {
             throw t;
         } catch (Throwable t) {
@@ -92,7 +127,7 @@ public class ConfigManager {
         }
     }
 
-    private <V> V doLoad(String configName, ConfigSerializer serializer, Class<V> configClass) throws Exception {
+    private <V> V doLoad(String configName, ConfigSerializer serializer, Class<V> configClass, ConfigSource configSource) throws Exception {
         SortedMap<Long, List<ConfigMigrationStategy>> configMigrations = readConfigMigrations();
         SortedSet<Long> migrationVersions = new TreeSet<Long>(configMigrations.keySet());
 
@@ -107,7 +142,7 @@ public class ConfigManager {
         }
     }
 
-    private URL doSave(String configName, Object config, ConfigSerializer serializer) throws Exception {
+    private URL doSave(String configName, Object config, ConfigSerializer serializer, ConfigSink configSink) throws Exception {
         SortedMap<Long, List<ConfigMigrationStategy>> configMigrations = readConfigMigrations();
         String serializedConfig = serializer.serialize(config);
         ConfigData configData = new ConfigData(configName, configMigrations.lastKey(), serializedConfig);

@@ -76,7 +76,7 @@ public class XPathMigrationStrategy implements ConfigMigrationStategy {
             Transformer transformer = transformerFactory.newTransformer();
             transformer.setOutputProperty(OutputKeys.INDENT, "yes");
             transformer.setOutputProperty(OutputKeys.METHOD, "xml");
-            transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+            transformer.setOutputProperty(OutputKeys.ENCODING, ConfigUtilConstants.DEFAULT_TEXT_ENCODING);
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             transformer.transform(new DOMSource(node), new StreamResult(bos));
             return bos.toString();

@@ -10,25 +10,34 @@ import java.util.*;
  * Date: 29-Apr-2010
  * Time: 16:30:13
  *
+ * ConfigDirectorySourceAndSink is the default source and sink for ConfigManager
+ * It saves and loads config files to/from a config directory.
+ *
+ * File names are calculated from the configName and the version number
+ * The version number forms part of the fileName, so that previous config versions can be kept
+ *
+ * When an attempt is made to load a config using a configName, ConfigDirectorySourceAndSink attempts to
+ * find possible config files, starting with the most recent version number, and returns ConfigData from the
+ * first valid config found.
  */
-public class FileSourceAndSink implements ConfigSink, ConfigSource {
+public class ConfigDirectorySourceAndSink implements ConfigSink, ConfigSource {
 
     private File configDirectory;
     private String extension;
     private String textFileEncoding;
-    private FileSource fileSource;
-    private FileSink fileSink;
+    private DirectorySource fileSource;
+    private DirectorySink fileSink;
 
-    public FileSourceAndSink(File configDirectory) {
-        this(configDirectory, "xml", "UTF-8");
+    public ConfigDirectorySourceAndSink(File configDirectory) {
+        this(configDirectory, "xml", ConfigUtilConstants.DEFAULT_TEXT_ENCODING);
     }
 
-    public FileSourceAndSink(File configDirectory, String extension, String textFileEncoding) {
+    public ConfigDirectorySourceAndSink(File configDirectory, String extension, String textFileEncoding) {
         this.configDirectory = configDirectory;
         this.extension = extension;
         this.textFileEncoding = textFileEncoding;
-        this.fileSource = new FileSource();
-        this.fileSink = new FileSink();
+        this.fileSource = new DirectorySource();
+        this.fileSink = new DirectorySink();
     }
 
     public ConfigData loadConfiguration(String configName, SortedSet<Long> supportedVersions) throws ConfigManagerException {
@@ -50,9 +59,9 @@ public class FileSourceAndSink implements ConfigSink, ConfigSource {
     /**
      * Implementation of FileSource
      */
-    private class FileSource extends AbstractConfigSource {
+    private class DirectorySource extends AbstractConfigSource {
 
-        public FileSource() {
+        public DirectorySource() {
             super(textFileEncoding);
         }
 
@@ -60,7 +69,7 @@ public class FileSourceAndSink implements ConfigSink, ConfigSource {
         protected List<String> getFileNames(String configName, List<Long> supportedVersions) {
             List<String> fileNames = new LinkedList<String>();
             for ( Long version : supportedVersions) {
-                fileNames.add(FileSourceAndSink.this.getConfigFileName(configName, version));
+                fileNames.add(ConfigDirectorySourceAndSink.this.getConfigFileName(configName, version));
             }
             return fileNames;
         }
@@ -92,15 +101,15 @@ public class FileSourceAndSink implements ConfigSink, ConfigSource {
     /**
      * Implementation of FileSink
      */
-    private class FileSink extends AbstractConfigSink {
+    private class DirectorySink extends AbstractConfigSink {
 
-        public FileSink() {
+        public DirectorySink() {
             super(textFileEncoding);
         }
 
         @Override
         protected String getConfigFileName(String configName, long version) {
-            return FileSourceAndSink.this.getConfigFileName(configName, version);
+            return ConfigDirectorySourceAndSink.this.getConfigFileName(configName, version);
         }
 
         protected URL writeConfig(ConfigData configuration, String fileName) throws Exception {
@@ -112,13 +121,14 @@ public class FileSourceAndSink implements ConfigSink, ConfigSource {
             checkConfigFileWritableIfExists(backupFile);
 
             File tempConfigFile = null;
+            FileOutputStream fos = null;
             try {
                 LogMethods.log.debug("About to create temp file");
                 tempConfigFile = File.createTempFile("tempConfig", "." + extension, configDirectory);
                 tempConfigFile.deleteOnExit();
 
                 LogMethods.log.debug("About to write: " + tempConfigFile);
-                FileOutputStream fos = new FileOutputStream(tempConfigFile);
+                fos = new FileOutputStream(tempConfigFile);
                 writeConfigToStream(fos, configuration.getSerializedConfig(), configuration.getVersion());
     
                 LogMethods.log.debug("Written: " + tempConfigFile);
@@ -143,17 +153,13 @@ public class FileSourceAndSink implements ConfigSink, ConfigSource {
                 LogMethods.log.error("Unable to save config: " + configFile, e);
                 throw new ConfigManagerException("Unable to save config", e);
             } finally {
-                if (tempConfigFile != null && tempConfigFile.exists()) {
-                    /*Yes this looks strange, but if there's been a problem closing
-                    the file, then the underlying outputstream is not closed
-                    which means that the file cannot be deleted because the stream
-                    still has a lock on it.  I've submitted a bug report to Sun about
-                    this.  One easy way to hit the bug if to have a full hard drive
-                     - saving the configuration then results in the temporary file not
-                    being cleaned up.*/
-                    System.gc();
-                    tempConfigFile.delete();
-                 }
+                if ( fos != null) {
+                    try {
+                        fos.close();
+                    } catch (Exception e) {
+                        LogMethods.log.error("Failed to close out file stream to file " + tempConfigFile.getPath(), e);
+                    }
+                }
             }
             return configFile.toURI().toURL();
         }

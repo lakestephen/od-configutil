@@ -20,11 +20,11 @@ public class BeanPersistenceSerializer implements ConfigSerializer {
         encoder.writeObject(configObject);
         encoder.flush();
         encoder.close();
-        return bos.toString("UTF-8");
+        return bos.toString(ConfigUtilConstants.DEFAULT_TEXT_ENCODING);
     }
 
     public <V> V deserialize(String serializedConfig, Class<V> clazz) throws UnsupportedEncodingException {
-        ByteArrayInputStream bis = new ByteArrayInputStream(serializedConfig.getBytes("UTF-8"));
+        ByteArrayInputStream bis = new ByteArrayInputStream(serializedConfig.getBytes(ConfigUtilConstants.DEFAULT_TEXT_ENCODING));
         XMLDecoder d = new XMLDecoder(bis);
         return (V)d.readObject();
     }

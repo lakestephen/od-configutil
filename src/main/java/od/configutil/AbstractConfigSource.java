@@ -44,16 +44,27 @@ public abstract class AbstractConfigSource implements ConfigSource {
     }
 
     /**
+     * The subclass should return an ordered list of possible file names given the configName and supportedVersion
+     * The config source will then attempt to load these file names in order, until one is successfully loaded
+     *
      * @return a List of possible filenames derived from configName and supportedVersions, first item in list takes priority
      */
     protected abstract List<String> getFileNames(String configName, List<Long> supportedVersions);
 
+    /**
+     * Called to indicate we are about to try to load a config with the supplied name
+     * If an exception is thrown, this will abort the load
+     *
+     * @param configName
+     * @throws ConfigManagerException
+     */
     protected abstract void loadStarting(String configName) throws ConfigManagerException;
 
     private ConfigData readConfig(String configName, String fileName, SortedSet<Long> supportedVersions) {
         ConfigData result = null;
+        InputStream configInputStream = null;
         try {
-            InputStream configInputStream = getInputStream(fileName);
+            configInputStream = getInputStream(fileName);
             if (configInputStream != null) {
                 BufferedReader br = new BufferedReader(new InputStreamReader(configInputStream, textFileEncoding));
                 long fileVersion = checkVersion(br, supportedVersions, fileName);
@@ -63,13 +74,26 @@ public abstract class AbstractConfigSource implements ConfigSource {
                 }
             }
         } catch (Throwable t) {
+            //we'll try the next filename, to see if we can load that
             LogMethods.log.error("Error loading " + configName + " configuration version " + supportedVersions + " looking for older configs..", t);
+        } finally {
+            if ( configInputStream != null) {
+                try {
+                    configInputStream.close();
+                } catch (IOException e) {
+                    LogMethods.log.error("Failed to close config input stream", e);
+                }
+            }
         }
         return result;
     }
 
+    /**
+     *  @return an InputStream for this configFileName, if it exists and is readable, or null if it does not exist, or an input stream cannot be opened
+     */
     protected abstract InputStream getInputStream(String configFileName) throws Exception;
 
+    //check a version from an already open input stream
     //expect to find configVersion=versionId on the first line
     //we strip this off before parsing the rest of the config
     protected long checkVersion(BufferedReader br, SortedSet<Long> requiredVersion, String fileName) throws IOException {
@@ -109,3 +133,33 @@ public abstract class AbstractConfigSource implements ConfigSource {
         return returnBuffer.toString();
     }
 }
+
+
+//
+//    protected long getVersion(String fileName) throws Exception {
+//        long result = -1;
+//        InputStream configInputStream = null;
+//        try {
+//            configInputStream = getInputStream(fileName);
+//            if (configInputStream != null) {
+//                BufferedReader br = new BufferedReader(new InputStreamReader(configInputStream, textFileEncoding));
+//                String firstLine = br.readLine();
+//                if (firstLine.startsWith(CONFIG_VERSION_PREFIX)) {
+//                    result = Long.parseLong(firstLine.substring(CONFIG_VERSION_PREFIX.length()));
+//                } else {
+//                    LogMethods.log.warn("Could not find configVersion in file " + fileName);
+//                }
+//            }
+//        } catch (Throwable t) {
+//            LogMethods.log.error("Error reading configuration version from  " + fileName, t);
+//        } finally {
+//            if ( configInputStream != null) {
+//                try {
+//                    configInputStream.close();
+//                } catch (IOException e) {
+//                    LogMethods.log.error("Failed to close config input stream", e);
+//                }
+//            }
+//        }
+//        return result;
+//    }

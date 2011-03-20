@@ -19,7 +19,7 @@ public class TestURLConfigSource extends TestCase {
         String tmpDirPath = System.getProperty("java.io.tmpdir");
         File tmpDir = new File(tmpDirPath);
 
-        FileSourceAndSink fs = new FileSourceAndSink(tmpDir);
+        ConfigDirectorySourceAndSink fs = new ConfigDirectorySourceAndSink(tmpDir);
         ConfigManager cm = new ConfigManager(tmpDir);
         cm.setMigrationSource(new ClasspathMigrationLoader("/configMigrations.xml"));
 
@@ -30,7 +30,7 @@ public class TestURLConfigSource extends TestCase {
         //now try loading the config using the URLConfigSource
         cm.setConfigSource(urlConfigSource);
         TestConfig t = cm.loadConfig(savedFileUrl.toString(), TestConfig.class);
-        assertEquals("TestConfig", t.getTestConfig());
+        assertEquals("TestConfig", t.getStringField());
 
         long timeMillis = System.currentTimeMillis();
         urlConfigSource.setTimeout(10);
@@ -44,16 +44,4 @@ public class TestURLConfigSource extends TestCase {
         }
     }
 
-    public static class TestConfig {
-
-        private String testConfig = "TestConfig";
-
-        public String getTestConfig() {
-            return testConfig;
-        }
-
-        public void setTestConfig(String testConfig) {
-            this.testConfig = testConfig;
-        }
-    }
 }

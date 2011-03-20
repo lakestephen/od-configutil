@@ -40,16 +40,12 @@ public abstract class AbstractConfigSink implements ConfigSink {
             throw new IllegalArgumentException("Text is null");
         }
         BufferedWriter out = new BufferedWriter(new OutputStreamWriter(outStream, textFileEncoding));
-        try {
-            //write configVersion=versionId on the first line
-            out.append(ConfigSource.CONFIG_VERSION_PREFIX);
-            out.append(String.valueOf(version));
-            out.newLine();
+        //write configVersion=versionId on the first line
+        out.append(ConfigSource.CONFIG_VERSION_PREFIX);
+        out.append(String.valueOf(version));
+        out.newLine();
 
-            out.write(text);
-        } finally {
-            out.flush();
-            out.close();
-        }
+        out.write(text);
+        out.flush();
     }
 }

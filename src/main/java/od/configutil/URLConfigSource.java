@@ -27,16 +27,16 @@ public class URLConfigSource extends AbstractConfigSource {
     }
 
     public URLConfigSource() {
-        this(null, "UTF-8");
+        this(null, ConfigUtilConstants.DEFAULT_TEXT_ENCODING);
     }
 
     public URLConfigSource(int timeoutMillis) {
-        this(null, "UTF-8");
+        this(null, ConfigUtilConstants.DEFAULT_TEXT_ENCODING);
         this.timeout = timeoutMillis;
     }
 
     public URLConfigSource(URL context) {
-        this(context, "UTF-8");
+        this(context, ConfigUtilConstants.DEFAULT_TEXT_ENCODING);
     }
     
     public URLConfigSource(URL context, String encoding) {
