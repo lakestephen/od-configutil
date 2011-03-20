@@ -1,13 +1,10 @@
 package od.configutil;
 
-import java.beans.XMLEncoder;
-import java.io.File;
-import java.io.FileOutputStream;
+import com.thoughtworks.xstream.XStream;
+
+import java.io.*;
 import java.util.*;
 import java.net.URL;
-import java.io.InputStream;
-import java.io.IOException;
-import java.beans.XMLDecoder;
 
 /**
  * Created by IntelliJ IDEA.
@@ -45,15 +42,15 @@ public class UrlMigrationLoader implements MigrationSource {
     }
 
     private void readMigrations(SortedMap<Long, List<ConfigMigrationStategy>> configMigrations, URL url) throws IOException {
-        InputStream i = null;
+        InputStreamReader r = null;
         try {
-            i = url.openStream();
-            XMLDecoder d = new XMLDecoder(i);
-            Migrations migrations = (Migrations)d.readObject();
+            r = new InputStreamReader(url.openStream(), ConfigUtilConstants.DEFAULT_TEXT_ENCODING);
+            XStream x = createXStream();
+            ConfigManagerMigrations migrations = (ConfigManagerMigrations)x.fromXML(r);
 
-            for (Migration m : migrations.getMigrations()) {
-                long versionTarget = m.getVersionTarget();
-                String className = m.getMigrationStrategyClassName();
+            for (Migration m : migrations.getMigrationList()) {
+                long versionTarget = m.getTargetVersion();
+                String className = m.getMigrationClass();
                 String[] constructorArguments = m.getArguments();
 
                 List<ConfigMigrationStategy> configMigrationForVersionTarget = configMigrations.get(versionTarget);
@@ -67,7 +64,7 @@ public class UrlMigrationLoader implements MigrationSource {
             }
         } finally {
             try {
-                if (i != null) i.close();
+                if (r != null) r.close();
             } catch (IOException e) {
                 LogMethods.log.error("Failed to close ConfigMigration InputStream from URL " + url, e);
             }
@@ -88,26 +85,42 @@ public class UrlMigrationLoader implements MigrationSource {
     /**
      *  Utility method to write a migrations file
      */
-    public static void writeMigrationsFile(Migrations m, File f) {
-        XMLEncoder e = null;
+    public static void writeMigrationsFile(ConfigManagerMigrations m, File f) {
+        OutputStreamWriter r = null;
         try {
-            FileOutputStream stream = new FileOutputStream(f);
-            e = new XMLEncoder(stream);
-            e.writeObject(m);
+            r = new OutputStreamWriter(new FileOutputStream(f));
+            XStream x = createXStream();
+            String config = x.toXML(m);
+            r.write(config);
         } catch (Exception ex) {
             ex.printStackTrace();
         } finally {
-            if ( e != null ) {
-                e.flush();
-                e.close();
+            if ( r != null ) {
+                try {
+                    r.flush();
+                    r.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
 
-    //util to write the first config migrations file, after that we can do it manually
+    private static XStream createXStream() {
+        XStream x = new XStream();
+        x.alias("configManager", ConfigManagerMigrations.class);
+        x.alias("migration", Migration.class);
+        x.alias("NullMigrationStrategy", NullMigrationStrategy.class);
+        x.alias("XPathMigrationStrategy", XPathMigrationStrategy.class);
+        x.alias("XsltMigrationStrategy", XsltMigrationStrategy.class);
+        x.alias("RegexMigrationStrategy", RegexMigrationStrategy.class);
+        return x;
+    }
+
+    //util to write the first config migrations file, solve the chicken an egg problem. After that we can do it manually
     public static void main(String[] args) {
-        Migration c = new Migration(201011181800l, "od.configutil.NullMigrationStrategy", new String[] {});
-        Migrations m = new Migrations();
+        Migration c = new Migration(201011181800l, "NullMigrationStrategy", new String[] {});
+        ConfigManagerMigrations m = new ConfigManagerMigrations();
         m.addMigration(c);
         writeMigrationsFile(m, new File(args[0]));
     }

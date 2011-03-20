@@ -7,33 +7,33 @@ package od.configutil;
 * Time: 14:38:49
 */
 public final class Migration {
-    private long versionTarget;
-    private String migrationStrategyClassName;
+    private long targetVersion;
+    private String migrationClass;
     private String[] arguments;
 
-    public Migration(long versionTarget, String migrationStrategyClassName, String[] arguments) {
-        this.versionTarget = versionTarget;
-        this.migrationStrategyClassName = migrationStrategyClassName;
+    public Migration(long targetVersion, String migrationClass, String[] arguments) {
+        this.targetVersion = targetVersion;
+        this.migrationClass = migrationClass;
         this.arguments = arguments;
     }
 
     public Migration() {
     }
 
-    public long getVersionTarget() {
-        return versionTarget;
+    public long getTargetVersion() {
+        return targetVersion;
     }
 
-    public void setVersionTarget(long versionTarget) {
-        this.versionTarget = versionTarget;
+    public void setTargetVersion(long targetVersion) {
+        this.targetVersion = targetVersion;
     }
 
-    public String getMigrationStrategyClassName() {
-        return migrationStrategyClassName;
+    public String getMigrationClass() {
+        return migrationClass;
     }
 
-    public void setMigrationStrategyClassName(String migrationStrategyClassName) {
-        this.migrationStrategyClassName = migrationStrategyClassName;
+    public void setMigrationClass(String migrationClass) {
+        this.migrationClass = migrationClass;
     }
 
     public String[] getArguments() {
