@@ -3,8 +3,16 @@
   <migrationList>
     <migration>
       <targetVersion>201011181800</targetVersion>
-      <migrationClass>NullMigrationStrategy</migrationClass>
+      <migrationClass>od.configutil.NullMigrationStrategy</migrationClass>
       <arguments/>
+    </migration>
+    <migration>
+      <targetVersion>201103201834</targetVersion>
+      <migrationClass>od.configutil.RegexMigrationStrategy</migrationClass>
+      <arguments>
+        <string>Last Refresh\w</string>
+        <string>Last Refresh Time</string>
+      </arguments>
     </migration>
   </migrationList>
 </configManager>

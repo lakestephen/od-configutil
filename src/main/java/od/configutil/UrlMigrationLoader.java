@@ -110,18 +110,16 @@ public class UrlMigrationLoader implements MigrationSource {
         XStream x = new XStream();
         x.alias("configManager", ConfigManagerMigrations.class);
         x.alias("migration", Migration.class);
-        x.alias("NullMigrationStrategy", NullMigrationStrategy.class);
-        x.alias("XPathMigrationStrategy", XPathMigrationStrategy.class);
-        x.alias("XsltMigrationStrategy", XsltMigrationStrategy.class);
-        x.alias("RegexMigrationStrategy", RegexMigrationStrategy.class);
         return x;
     }
 
     //util to write the first config migrations file, solve the chicken an egg problem. After that we can do it manually
     public static void main(String[] args) {
-        Migration c = new Migration(201011181800l, "NullMigrationStrategy", new String[] {});
+        Migration c = new Migration(201011181800L, NullMigrationStrategy.class.getName(), new String[] {});
+        Migration c1 = new Migration(201103201834L, RegexMigrationStrategy.class.getName(), new String[] {"Last Refresh\\w", "Last Refresh Time"});
         ConfigManagerMigrations m = new ConfigManagerMigrations();
         m.addMigration(c);
+        m.addMigration(c1);
         writeMigrationsFile(m, new File(args[0]));
     }
 
