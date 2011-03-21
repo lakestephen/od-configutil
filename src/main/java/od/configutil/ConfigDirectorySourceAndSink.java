@@ -128,14 +128,29 @@ public class ConfigDirectorySourceAndSink implements ConfigSink, ConfigSource {
                 tempConfigFile.deleteOnExit();
 
                 LogMethods.log.debug("About to write: " + tempConfigFile);
-                fos = new FileOutputStream(tempConfigFile);
-                writeConfigToStream(fos, configuration.getSerializedConfig(), configuration.getVersion());
-    
+
+                try {
+                    fos = new FileOutputStream(tempConfigFile);
+                    writeConfigToStream(fos, configuration.getSerializedConfig(), configuration.getVersion());
+                } finally {
+                    if ( fos != null) {
+                        try {
+                            fos.close();
+                        } catch (Exception e) {
+                            LogMethods.log.error("Failed to close out file stream to temp file " + tempConfigFile.getPath(), e);
+                        }
+                    }
+                }
                 LogMethods.log.debug("Written: " + tempConfigFile);
 
                 if ( backupFile.exists()) {
                     LogMethods.log.debug("About to delete " + backupFile);
-                    backupFile.delete();
+                    boolean deleted = backupFile.delete();
+                    if (deleted) {
+                        LogMethods.log.debug("Deleted " + backupFile);
+                    } else {
+                        LogMethods.log.warn("Failed to delete " + backupFile);
+                    }
                 }
 
                 if ( configFile.exists()) {
@@ -152,14 +167,6 @@ public class ConfigDirectorySourceAndSink implements ConfigSink, ConfigSource {
             } catch (IOException e) {
                 LogMethods.log.error("Unable to save config: " + configFile, e);
                 throw new ConfigManagerException("Unable to save config", e);
-            } finally {
-                if ( fos != null) {
-                    try {
-                        fos.close();
-                    } catch (Exception e) {
-                        LogMethods.log.error("Failed to close out file stream to file " + tempConfigFile.getPath(), e);
-                    }
-                }
             }
             return configFile.toURI().toURL();
         }
