@@ -41,8 +41,10 @@ public abstract class AbstractConfigSink implements ConfigSink {
         }
         BufferedWriter out = new BufferedWriter(new OutputStreamWriter(outStream, textFileEncoding));
         //write configVersion=versionId on the first line
+        out.append("<!-- "); //use a comment format which works well with sgml and derivatives
         out.append(ConfigSource.CONFIG_VERSION_PREFIX);
         out.append(String.valueOf(version));
+        out.append(" -->");
         out.newLine();
 
         out.write(text);

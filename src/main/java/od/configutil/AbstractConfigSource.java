@@ -2,6 +2,8 @@ package od.configutil;
 
 import java.io.*;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by IntelliJ IDEA.
@@ -13,6 +15,7 @@ import java.util.*;
  */
 public abstract class AbstractConfigSource implements ConfigSource {
 
+    private static Pattern configVersionPattern = Pattern.compile(CONFIG_VERSION_PREFIX + "(\\d+)");
     private String textFileEncoding;
 
     public AbstractConfigSource(String textFileEncoding) {
@@ -98,12 +101,14 @@ public abstract class AbstractConfigSource implements ConfigSource {
     //we strip this off before parsing the rest of the config
     protected long checkVersion(BufferedReader br, SortedSet<Long> requiredVersion, String fileName) throws IOException {
         String firstLine = br.readLine();
-
         long result = -1;
-        if (firstLine.startsWith(CONFIG_VERSION_PREFIX)) {
-            long versionNumber = Long.parseLong(firstLine.substring(CONFIG_VERSION_PREFIX.length()));
+        Matcher configVerisonMatcher = configVersionPattern.matcher(firstLine);
+        if ( configVerisonMatcher.find()) {
+            long versionNumber = Long.parseLong(configVerisonMatcher.group(1));
             if (requiredVersion.contains(versionNumber)) {
                 result = versionNumber;
+            } else {
+                LogMethods.log.warn("Config file " + fileName + " is version " + versionNumber + " which is not one of the supported versions");
             }
         } else {
             LogMethods.log.warn("Could not find configVersion in file " + fileName + ", will skip this file");
@@ -133,33 +138,3 @@ public abstract class AbstractConfigSource implements ConfigSource {
         return returnBuffer.toString();
     }
 }
-
-
-//
-//    protected long getVersion(String fileName) throws Exception {
-//        long result = -1;
-//        InputStream configInputStream = null;
-//        try {
-//            configInputStream = getInputStream(fileName);
-//            if (configInputStream != null) {
-//                BufferedReader br = new BufferedReader(new InputStreamReader(configInputStream, textFileEncoding));
-//                String firstLine = br.readLine();
-//                if (firstLine.startsWith(CONFIG_VERSION_PREFIX)) {
-//                    result = Long.parseLong(firstLine.substring(CONFIG_VERSION_PREFIX.length()));
-//                } else {
-//                    LogMethods.log.warn("Could not find configVersion in file " + fileName);
-//                }
-//            }
-//        } catch (Throwable t) {
-//            LogMethods.log.error("Error reading configuration version from  " + fileName, t);
-//        } finally {
-//            if ( configInputStream != null) {
-//                try {
-//                    configInputStream.close();
-//                } catch (IOException e) {
-//                    LogMethods.log.error("Failed to close config input stream", e);
-//                }
-//            }
-//        }
-//        return result;
-//    }

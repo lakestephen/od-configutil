@@ -1,5 +1,6 @@
 package od.configutil;
 
+import javax.swing.*;
 import java.io.File;
 import java.net.URL;
 import java.util.*;
@@ -79,6 +80,7 @@ public class ConfigManager {
         } catch (ConfigManagerException t) {
             throw t;
         } catch (Throwable t) {
+            JOptionPane.showMessageDialog(null, "TimeSerious could not load your config. A default config will be used", "Failed to load config", JOptionPane.WARNING_MESSAGE);
             throw new ConfigManagerException("Failed during ConfigManger.loadConfig", t);
         }
     }

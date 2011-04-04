@@ -25,37 +25,39 @@ import java.io.ByteArrayOutputStream;
  */
 public class XPathMigrationStrategy implements ConfigMigrationStategy {
 
+    private static final String REMOVE_NODE = "REMOVE NODE";
     private long versionTarget;
-    private String targetConfig;
     private String xpathExpression;
     private String replacementString;
 
     public XPathMigrationStrategy(long versionTarget, String[] arguments) {
         this.versionTarget = versionTarget;
-        this.targetConfig = arguments[0];
-        this.xpathExpression = arguments[1];
-        this.replacementString = arguments[2];
+        this.xpathExpression = arguments[0];
+        this.replacementString = arguments[1];
     }
 
     public String migrate(String configKey, String source) {
-        // If there is a config key and it doesn't match, just pass the source on (identity)
-        if (!(this.targetConfig == null || this.targetConfig.length() == 0) && !this.targetConfig.equals(configKey))
-            return source;
         LogMethods.log.info("Patching " + configKey + " configuration to version " + versionTarget + " with XPath strategy");
         Node rootNode = null;
         try {
-
             rootNode = stringToXML(source);
             XPath xpath = XPathFactory.newInstance().newXPath();
             NodeList nodeList = (NodeList) xpath.evaluate(xpathExpression, rootNode, XPathConstants.NODESET);
 
             for (int i = 0; i < nodeList.getLength(); i++) {
-                nodeList.item(i).setNodeValue(replacementString);
+                Node item = nodeList.item(i);
+                System.out.println(item.toString());
+                if ( replacementString.trim().equalsIgnoreCase(REMOVE_NODE)) {
+                    item.getParentNode().removeChild(item);
+                } else {
+                    item.setNodeValue(replacementString);
+                }
             }
         } catch (XPathExpressionException e) {
             LogMethods.log.error("Error in XPath config migration", e);
         }
 
+        System.out.println(xmlToString(rootNode));
         return xmlToString(rootNode);
     }
 
