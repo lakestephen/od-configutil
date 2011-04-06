@@ -56,8 +56,6 @@ public class XPathMigrationStrategy implements ConfigMigrationStategy {
         } catch (XPathExpressionException e) {
             LogMethods.log.error("Error in XPath config migration", e);
         }
-
-        System.out.println(xmlToString(rootNode));
         return xmlToString(rootNode);
     }
 
