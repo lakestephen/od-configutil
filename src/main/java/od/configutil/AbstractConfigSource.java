@@ -78,13 +78,13 @@ public abstract class AbstractConfigSource implements ConfigSource {
             }
         } catch (Throwable t) {
             //we'll try the next filename, to see if we can load that
-            LogMethods.log.error("Error loading " + configName + " configuration version " + supportedVersions + " looking for older configs..", t);
+            ConfigLogImplementation.logMethods.error("Error loading " + configName + " configuration version " + supportedVersions + " looking for older configs..", t);
         } finally {
             if ( configInputStream != null) {
                 try {
                     configInputStream.close();
                 } catch (IOException e) {
-                    LogMethods.log.error("Failed to close config input stream", e);
+                    ConfigLogImplementation.logMethods.error("Failed to close config input stream", e);
                 }
             }
         }
@@ -108,10 +108,10 @@ public abstract class AbstractConfigSource implements ConfigSource {
             if (requiredVersion.contains(versionNumber)) {
                 result = versionNumber;
             } else {
-                LogMethods.log.warn("Config file " + fileName + " is version " + versionNumber + " which is not one of the supported versions");
+                ConfigLogImplementation.logMethods.warn("Config file " + fileName + " is version " + versionNumber + " which is not one of the supported versions");
             }
         } else {
-            LogMethods.log.warn("Could not find configVersion in file " + fileName + ", will skip this file");
+            ConfigLogImplementation.logMethods.warn("Could not find configVersion in file " + fileName + ", will skip this file");
         }
         return result;
     }

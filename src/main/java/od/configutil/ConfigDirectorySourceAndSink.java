@@ -25,8 +25,8 @@ public class ConfigDirectorySourceAndSink implements ConfigSink, ConfigSource {
     private File configDirectory;
     private String extension;
     private String textFileEncoding;
-    private DirectorySource fileSource;
-    private DirectorySink fileSink;
+    private DirectorySource dirSource;
+    private DirectorySink dirSink;
 
     public ConfigDirectorySourceAndSink(File configDirectory) {
         this(configDirectory, "xml", ConfigUtilConstants.DEFAULT_TEXT_ENCODING);
@@ -36,20 +36,20 @@ public class ConfigDirectorySourceAndSink implements ConfigSink, ConfigSource {
         this.configDirectory = configDirectory;
         this.extension = extension;
         this.textFileEncoding = textFileEncoding;
-        this.fileSource = new DirectorySource();
-        this.fileSink = new DirectorySink();
+        this.dirSource = new DirectorySource();
+        this.dirSink = new DirectorySink();
     }
 
     public ConfigData loadConfiguration(String configName, SortedSet<Long> supportedVersions) throws ConfigManagerException {
-        return fileSource.loadConfiguration(configName, supportedVersions);
+        return dirSource.loadConfiguration(configName, supportedVersions);
     }
 
     public URL saveConfiguration(ConfigData configuration) throws ConfigManagerException {
-        return fileSink.saveConfiguration(configuration);
+        return dirSink.saveConfiguration(configuration);
     }
 
     public boolean canWrite() {
-        return fileSink.canWrite();
+        return dirSink.canWrite();
     }
 
     public File getConfigDirectory() {
@@ -75,7 +75,7 @@ public class ConfigDirectorySourceAndSink implements ConfigSink, ConfigSource {
         }
 
         protected void loadStarting(String configName) throws ConfigManagerException {
-            LogMethods.log.info("Searching for " + configName + " configuration in: " + configDirectory);
+            ConfigLogImplementation.logMethods.info("Searching for " + configName + " configuration in: " + configDirectory);
             checkConfigDirectoryReadable();
         }
 
@@ -89,10 +89,10 @@ public class ConfigDirectorySourceAndSink implements ConfigSink, ConfigSource {
             InputStream configInputStream = null;
             File f = new File(configDirectory, configFileName);
             if (f.canRead()) {
-                LogMethods.log.info("Found configuration file: " + f);
+                ConfigLogImplementation.logMethods.info("Found configuration file: " + f);
                 configInputStream = new FileInputStream(f);
             } else {
-                LogMethods.log.info("Could not " + (f.exists() ? "read" : "find") + " configuration file: " + f);
+                ConfigLogImplementation.logMethods.info("Could not " + (f.exists() ? "read" : "find") + " configuration file: " + f);
             }
             return configInputStream;
         }
@@ -115,7 +115,7 @@ public class ConfigDirectorySourceAndSink implements ConfigSink, ConfigSource {
         protected URL writeConfig(ConfigData configuration, String fileName) throws Exception {
             File configFile = new File(configDirectory, fileName);
             File backupFile = new File(configDirectory, fileName + ".bak");
-            LogMethods.log.info("Writing configuration file at " + configFile);
+            ConfigLogImplementation.logMethods.info("Writing configuration file at " + configFile);
             checkConfigDirectoryWritable();
             checkConfigFileWritableIfExists(configFile);
             checkConfigFileWritableIfExists(backupFile);
@@ -123,11 +123,11 @@ public class ConfigDirectorySourceAndSink implements ConfigSink, ConfigSource {
             File tempConfigFile = null;
             FileOutputStream fos = null;
             try {
-                LogMethods.log.debug("About to create temp file");
+                ConfigLogImplementation.logMethods.debug("About to create temp file");
                 tempConfigFile = File.createTempFile("tempConfig", "." + extension, configDirectory);
                 tempConfigFile.deleteOnExit();
 
-                LogMethods.log.debug("About to write: " + tempConfigFile);
+                ConfigLogImplementation.logMethods.debug("About to write: " + tempConfigFile);
 
                 try {
                     fos = new FileOutputStream(tempConfigFile);
@@ -137,35 +137,35 @@ public class ConfigDirectorySourceAndSink implements ConfigSink, ConfigSource {
                         try {
                             fos.close();
                         } catch (Exception e) {
-                            LogMethods.log.error("Failed to close out file stream to temp file " + tempConfigFile.getPath(), e);
+                            ConfigLogImplementation.logMethods.error("Failed to close out file stream to temp file " + tempConfigFile.getPath(), e);
                         }
                     }
                 }
-                LogMethods.log.debug("Written: " + tempConfigFile);
+                ConfigLogImplementation.logMethods.debug("Written: " + tempConfigFile);
 
                 if ( backupFile.exists()) {
-                    LogMethods.log.debug("About to delete " + backupFile);
+                    ConfigLogImplementation.logMethods.debug("About to delete " + backupFile);
                     boolean deleted = backupFile.delete();
                     if (deleted) {
-                        LogMethods.log.debug("Deleted " + backupFile);
+                        ConfigLogImplementation.logMethods.debug("Deleted " + backupFile);
                     } else {
-                        LogMethods.log.warn("Failed to delete " + backupFile);
+                        ConfigLogImplementation.logMethods.warn("Failed to delete " + backupFile);
                     }
                 }
 
                 if ( configFile.exists()) {
-                    LogMethods.log.debug("About to rename old config: " + configFile + " to " + backupFile);
+                    ConfigLogImplementation.logMethods.debug("About to rename old config: " + configFile + " to " + backupFile);
                     if (!configFile.renameTo(backupFile)) {
                         throw new IOException("Unable to rename old config: " + configFile + " to " + backupFile);
                     }
                 }
                 
-                LogMethods.log.debug("About to rename temp config: " + tempConfigFile + " to " + configFile);
+                ConfigLogImplementation.logMethods.debug("About to rename temp config: " + tempConfigFile + " to " + configFile);
                 if (!tempConfigFile.renameTo(configFile)) {
                     throw new IOException("Unable to rename temp config: " + tempConfigFile + " to new config: " + configFile);
                 }
             } catch (IOException e) {
-                LogMethods.log.error("Unable to save config: " + configFile, e);
+                ConfigLogImplementation.logMethods.error("Unable to save config: " + configFile, e);
                 throw new ConfigManagerException("Unable to save config", e);
             }
             return configFile.toURI().toURL();
@@ -197,7 +197,7 @@ public class ConfigDirectorySourceAndSink implements ConfigSink, ConfigSource {
                     }
                 }
             } catch (IOException e) {
-                LogMethods.log.warn("Test file write to config directory failed at " + configDirectory);
+                ConfigLogImplementation.logMethods.warn("Test file write to config directory failed at " + configDirectory);
             }
             return testFileWrite;
         }

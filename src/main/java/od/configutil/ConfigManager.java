@@ -169,12 +169,12 @@ public class ConfigManager {
         long fromVersion = oldConfig.getVersion();
         long toVersion = migrations.lastKey();
         String configString = oldConfig.getSerializedConfig();
-        LogMethods.log.info("config " + configName + " at version " + fromVersion + ", required version " + toVersion);
+        ConfigLogImplementation.logMethods.info("config " + configName + " at version " + fromVersion + ", required version " + toVersion);
 
         migrationsToRun.remove(fromVersion); //we are already at this patch version, don't need to run migration        
         for (Map.Entry<Long, List<ConfigMigrationStategy>> entry : migrationsToRun.entrySet() ) {
             for (ConfigMigrationStategy s : entry.getValue()) {
-                LogMethods.log.info("Migrating config " + configName + " to version " + entry.getKey() + " using strategy " + s);
+                ConfigLogImplementation.logMethods.info("Migrating config " + configName + " to version " + entry.getKey() + " using strategy " + s);
                 configString = s.migrate(configName, configString);
             }
         }

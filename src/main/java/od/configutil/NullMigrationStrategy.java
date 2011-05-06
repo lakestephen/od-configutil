@@ -17,7 +17,7 @@ public class NullMigrationStrategy implements ConfigMigrationStategy {
     }
 
     public String migrate(String configKey, String source) {
-        LogMethods.log.info("Migrating " + configKey + " configuration to version " + versionTarget + " using null strategy");
+        ConfigLogImplementation.logMethods.info("Migrating " + configKey + " configuration to version " + versionTarget + " using null strategy");
         return source;
     }
 }

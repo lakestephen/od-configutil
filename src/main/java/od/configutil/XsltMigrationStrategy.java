@@ -29,7 +29,7 @@ public class XsltMigrationStrategy implements ConfigMigrationStategy {
     }
 
     public String migrate(String configKey, String source) {
-        LogMethods.log.info("Migrating " + configKey + " configuration to version " + versionTarget + " using xslt strategy " + xslResourceInClassPath);
+        ConfigLogImplementation.logMethods.info("Migrating " + configKey + " configuration to version " + versionTarget + " using xslt strategy " + xslResourceInClassPath);
         String transformedSource = source;
 
         TransformerFactory tFactory = new TransformerFactoryImpl();
@@ -43,17 +43,17 @@ public class XsltMigrationStrategy implements ConfigMigrationStategy {
                 transformer.transform(new StreamSource(byteArrayInputStream), new StreamResult(os));
                 transformedSource = os.toString();
             } catch ( Throwable t) {
-                LogMethods.log.error("Failed to transform config using xsl strategy", t);
+                ConfigLogImplementation.logMethods.error("Failed to transform config using xsl strategy", t);
             } finally {
                 try {
                     xslInputStream.close();
                     byteArrayInputStream.close();
                 } catch (IOException e) {
-                    LogMethods.log.error("Failed close stream after xsl config migration strategy", e);
+                    ConfigLogImplementation.logMethods.error("Failed close stream after xsl config migration strategy", e);
                 }
             }
         } else {
-            LogMethods.log.error("Resource " + xslResourceInClassPath + " not found. Failed to transform config using xsl strategy");
+            ConfigLogImplementation.logMethods.error("Resource " + xslResourceInClassPath + " not found. Failed to transform config using xsl strategy");
         }
         //System.out.println("----------------------------------------------->");
         //System.out.println(transformedSource);

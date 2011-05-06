@@ -42,7 +42,7 @@ public class FileSink extends AbstractConfigSink {
                 try {
                     fos.close();
                 } catch (Exception e) {
-                    LogMethods.log.error("Failed to close out file stream to file " + file.getPath(), e);
+                    ConfigLogImplementation.logMethods.error("Failed to close out file stream to file " + file.getPath(), e);
                 }
             }
         }

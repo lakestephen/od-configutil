@@ -53,7 +53,7 @@ public class URLConfigSource extends AbstractConfigSource {
 
     @Override
     protected void loadStarting(String configName) throws ConfigManagerException {
-        LogMethods.log.info("Loading config " + configName + " from context");
+        ConfigLogImplementation.logMethods.info("Loading config " + configName + " from context");
     }
 
     @Override
@@ -84,7 +84,7 @@ public class URLConfigSource extends AbstractConfigSource {
                 try {
                     stream = url.openStream();
                 } catch (IOException e) {
-                    LogMethods.log.error("Error opening input stream from URL " + url, e);
+                    ConfigLogImplementation.logMethods.error("Error opening input stream from URL " + url, e);
                 }
                 latch.countDown();
             }

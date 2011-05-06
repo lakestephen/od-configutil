@@ -30,7 +30,7 @@ public class FileSource extends AbstractConfigSource {
     }
 
     protected void loadStarting(String configName) throws ConfigManagerException {
-        LogMethods.log.info("About to load config from file " + file);
+        ConfigLogImplementation.logMethods.info("About to load config from file " + file);
         if ( file == null ) {
             throw new ConfigManagerException("Cannot load config from a null file");
         } else if ( ! file.canRead()) {

@@ -37,7 +37,7 @@ public class XPathMigrationStrategy implements ConfigMigrationStategy {
     }
 
     public String migrate(String configKey, String source) {
-        LogMethods.log.info("Patching " + configKey + " configuration to version " + versionTarget + " with XPath strategy");
+        ConfigLogImplementation.logMethods.info("Patching " + configKey + " configuration to version " + versionTarget + " with XPath strategy");
         Node rootNode = null;
         try {
             rootNode = stringToXML(source);
@@ -54,7 +54,7 @@ public class XPathMigrationStrategy implements ConfigMigrationStategy {
                 }
             }
         } catch (XPathExpressionException e) {
-            LogMethods.log.error("Error in XPath config migration", e);
+            ConfigLogImplementation.logMethods.error("Error in XPath config migration", e);
         }
         return xmlToString(rootNode);
     }

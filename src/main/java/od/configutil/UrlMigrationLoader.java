@@ -35,7 +35,7 @@ public class UrlMigrationLoader implements MigrationSource {
                 readMigrations(configMigrations, url);
             }
         } catch (Exception e) {
-            LogMethods.log.error("Failed to load config migrations", e);
+            ConfigLogImplementation.logMethods.error("Failed to load config migrations", e);
             throw e;
         }
         return configMigrations;
@@ -66,7 +66,7 @@ public class UrlMigrationLoader implements MigrationSource {
             try {
                 if (r != null) r.close();
             } catch (IOException e) {
-                LogMethods.log.error("Failed to close ConfigMigration InputStream from URL " + url, e);
+                ConfigLogImplementation.logMethods.error("Failed to close ConfigMigration InputStream from URL " + url, e);
             }
         }
     }

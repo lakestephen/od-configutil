@@ -30,7 +30,7 @@ public class ClasspathMigrationLoader extends UrlMigrationLoader {
         if ( u != null ) {
             urls.add(u);
         } else {
-            LogMethods.log.error("Failed to find configMigrations resource from " + path);
+            ConfigLogImplementation.logMethods.error("Failed to find configMigrations resource from " + path);
         }
         return urls;
     }
