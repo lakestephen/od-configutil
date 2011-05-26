@@ -6,7 +6,7 @@ package od.configutil;
 * Date: 20/03/11
 * Time: 17:45
 */
-public class TestConfig {
+public class ConfigUtilTestConfig {
 
     private String stringField = "TestConfig";
 
@@ -22,7 +22,7 @@ public class TestConfig {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        TestConfig that = (TestConfig) o;
+        ConfigUtilTestConfig that = (ConfigUtilTestConfig) o;
 
         if (stringField != null ? !stringField.equals(that.stringField) : that.stringField != null) return false;
 

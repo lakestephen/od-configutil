@@ -3,7 +3,6 @@ package od.configutil;
 import junit.framework.TestCase;
 
 import java.io.File;
-import java.io.IOException;
 
 /**
  * Created by IntelliJ IDEA.
@@ -19,12 +18,12 @@ public class TestFileSourceAndFileSink extends TestCase {
         File f = File.createTempFile("temp", "xml");
         f.deleteOnExit();
 
-        TestConfig config = new TestConfig();
+        ConfigUtilTestConfig config = new ConfigUtilTestConfig();
         FileSink configSink = new FileSink(f);
         c.saveConfig("testWriteWithFileSink", config, configSink);
 
         FileSource fileSource = new FileSource(f);
-        TestConfig config2 = c.loadConfig("testWriteWithFileSink", TestConfig.class, fileSource);
+        ConfigUtilTestConfig config2 = c.loadConfig("testWriteWithFileSink", ConfigUtilTestConfig.class, fileSource);
 
         assertEquals("Config 1 and 2", config, config2);
     }
