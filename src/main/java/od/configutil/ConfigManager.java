@@ -16,15 +16,22 @@ public class ConfigManager {
     private ConfigSerializer configSerializer;
 
     public ConfigManager() {
-        this.migrationSource = new ClasspathMigrationLoader();
+        setDefaultMigrationSource();
         createDefaultSourceAndSink();
         createDefaultSerializer();
     }
 
     public ConfigManager(File configDirectory) {
-        this.migrationSource = new ClasspathMigrationLoader();
+        setDefaultMigrationSource();
         createDirectorySourceAndSink(configDirectory);
         createDefaultSerializer();
+    }
+
+    protected void setDefaultMigrationSource() {
+        this.migrationSource = new AggregatedURLMigrationLoader(
+            new ClasspathMigrationLoader(),
+            new SysPropertyURLMigrationLoader()
+        );
     }
 
     private void createDefaultSourceAndSink() {

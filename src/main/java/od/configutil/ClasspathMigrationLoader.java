@@ -13,16 +13,17 @@ import java.util.ArrayList;
 public class ClasspathMigrationLoader extends UrlMigrationLoader {
 
     private static final String DEFAULT_MIGRATION_PATH = "/configMigrations.xml";
+    private String path;
 
     public ClasspathMigrationLoader() {
-        super(getConfigMigrationUrl(DEFAULT_MIGRATION_PATH));
+        this(DEFAULT_MIGRATION_PATH);
     }
 
     public ClasspathMigrationLoader(String path) {
-        super(getConfigMigrationUrl(path));
+        this.path = path;
     }
 
-    private static List<URL> getConfigMigrationUrl(String path) {
+    protected List<URL> getURL() {
         List<URL> urls = new ArrayList<URL>();
         URL u = ClasspathMigrationLoader.class.getResource(
             path

@@ -12,19 +12,16 @@ import java.net.URL;
  * Date: 29-Apr-2010
  * Time: 14:41:09
  */
-public class UrlMigrationLoader implements MigrationSource {
+public abstract class UrlMigrationLoader implements MigrationSource {
 
-    private List<URL> urls;
+    public UrlMigrationLoader() {}
 
-    public UrlMigrationLoader(URL... url) {
-        this(Arrays.asList(url));
-    }
+    private List<URL> cachedURL;
 
-    public UrlMigrationLoader(List<URL> urls) {
-        this.urls = urls;
-    }
+    protected abstract List<URL> getURL();
 
     public SortedMap<Long, List<ConfigMigrationStategy>> loadConfigMigrations() throws Exception {
+        List<URL> urls = cachedGetURL();
         SortedMap<Long, List<ConfigMigrationStategy>> configMigrations = new TreeMap<Long, List<ConfigMigrationStategy>>();
         try {
             if ( urls.size() == 0) {
@@ -111,6 +108,13 @@ public class UrlMigrationLoader implements MigrationSource {
         x.alias("configManager", ConfigManagerMigrations.class);
         x.alias("migration", Migration.class);
         return x;
+    }
+
+    private List<URL> cachedGetURL() {
+        if (cachedURL == null) {
+            cachedURL = getURL();
+        }
+        return cachedURL;
     }
 
     //util to write the first config migrations file, solve the chicken an egg problem. After that we can do it manually
