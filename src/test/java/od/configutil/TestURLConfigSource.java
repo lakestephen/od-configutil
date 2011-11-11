@@ -1,6 +1,9 @@
 package od.configutil;
 
 import junit.framework.TestCase;
+import od.configutil.migration.ClasspathMigrationLoader;
+import od.configutil.sinkandsource.ConfigDirectorySourceAndSink;
+import od.configutil.sinkandsource.URLConfigSource;
 
 import java.io.File;
 import java.net.URL;

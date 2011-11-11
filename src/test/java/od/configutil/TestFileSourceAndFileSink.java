@@ -1,6 +1,8 @@
 package od.configutil;
 
 import junit.framework.TestCase;
+import od.configutil.sinkandsource.FileSink;
+import od.configutil.sinkandsource.FileSource;
 
 import java.io.File;
 

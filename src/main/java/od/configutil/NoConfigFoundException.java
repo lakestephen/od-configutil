@@ -1,5 +1,7 @@
 package od.configutil;
 
+import od.configutil.util.ConfigManagerException;
+
 /**
  * Created by IntelliJ IDEA.
  * User: nick
