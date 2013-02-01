@@ -24,24 +24,29 @@ import java.util.*;
  * Saving of configs takes place to a ConfigSink
  *
  * When saving a config, the ConfigManager expects to receive a Java class instance representing config data
- * The bean will then be serialized using the configured ConfigSerializer (this may perform serialization
- * to XML using XStream, for example). The serialized String data output will then be written to the ConfigSink
+ * The bean will then be serialized to a String value using the configured ConfigSerializer (this may perform serialization
+ * to XML using XStream, for example). The serialized config data will then be written to the ConfigSink
  *
- * Versioning of configs is also handled by ConfigManager. Associated with ConfigManager is a migrationSource.
- * This defines a list of Config Migrations each of which map to a configuration id. When saving a config, in
- * general the ConfigSink will persist the config data along with the most recent configuration id as supplied by
- * the configured migrationSource.
+ * ConfigManager also handles config versions and can migrate older configs to bring them up to date for a newer config
+ * version. Associated with ConfigManager is a migrationSource. This defines a list of Config Migrations each of which
+ * are associated with a Long configuration id. The configuration id is generally based on a date and time in year-first
+ * format yyyyMMddHHss (e.g. 201302010830) which allows sorting as a Long value. When saving a config, the ConfigSink
+ * will persist the most recent configuration id along with the serialized config data.
+ *
+ * The configuration id value represents the time when the config format last changed. Each time a config migration is
+ * added (because the configuration format is changing) the developer defining the migration sets the new version id,
+ * and defines a migration which can transform the previous version of the serialized config data into the current version.
+ * (Using XPathMigrationStrategy for example). A ClasspathMigrationLoader is supplied, which loads config migrations from
+ * an xml file on the classpath, typically from /configMigrations.xml
  *
  * When loading a config, both the saved config data and the saved configuration id are loaded by the ConfigSource.
  * Before deserialization takes place, any config migrations from the migrationSource which represent more recent
- * versions of the configuration are used to transform the loaded configuration into a version consistent with the
+ * versions of the configuration are used in sequence to transform the loaded configuration into a version consistent with the
  * most recent configuration id. For example, if the persisted config contained XML which referenced a renamed class,
- * a regular expression migration might be used to migrate the class name for the more recent config version. Once any
- * migrations have been applied, the config data is then deserialized back into a Java object by the configSerializer.
- * A ClasspathMigrationLoader is supplied, which loads config migrations from an xml file on the classpath, typically
- * from /configMigrations.xml
+ * a regular expression migration strategy might be used to migrate the class name to reflect the more recent config version.
+ * Once any migrations have been applied, the config data is then deserialized back into a Java object by the configSerializer.
  *
- * All the above elements, the ConfigSource, ConfigSink, MigrationSource and ConfigSerialzier are customisable.
+ * All the above elements, the ConfigSource, ConfigSink, MigrationSource and ConfigSerializer are customisable.
  * ConfigManger may be configured with a default in each case, but alternative instances can also be passed into
  * overloaded save and load method implementations.
  *
